@@ -1,3 +1,4 @@
+# detect-secrets-plus: modified from upstream Yelp/detect-secrets (Apache-2.0). See NOTICE.
 import inspect
 from abc import abstractproperty
 from functools import lru_cache
@@ -15,6 +16,7 @@ from ...settings import get_settings
 from ...util.importlib import import_file_as_module
 from ...util.importlib import import_types_from_module
 from ...util.importlib import import_types_from_package
+from ...util.path import parse_path
 
 
 Plugin = TypeVar('Plugin', bound=BasePlugin)
@@ -39,7 +41,8 @@ def get_mapping_from_secret_type_to_class() -> Dict[str, Type[Plugin]]:
             continue
 
         # Only supporting file schema right now.
-        filename = config['path'][len('file://'):]
+        parsed = parse_path(config['path'])
+        filename = parsed.file_path or config['path'][len('file://'):]
         for plugin_class in get_plugins_from_file(filename):
             output[cast(BasePlugin, plugin_class).secret_type] = plugin_class
 

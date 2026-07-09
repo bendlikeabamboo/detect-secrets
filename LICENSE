@@ -186,7 +186,13 @@ APPENDIX: How to apply the Apache License to your work.
    same "printed page" as the copyright notice for easier
    identification within third-party archives.
 
-Copyright 2017-2018 Yelp Inc.
+Copyright 2017-2018 Yelp, Inc.
+Copyright 2026 bendlikeabamboo (detect-secrets-plus fork)
+
+Modifications in this fork include centralized cross-platform path
+parsing for custom plugins and filters (detect_secrets/util/path.py)
+and related refactors. The original work is available at:
+https://github.com/Yelp/detect-secrets
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.

@@ -1,0 +1,17 @@
+detect-secrets-plus
+===================
+
+This product is a community fork of `detect-secrets`, originally developed by:
+
+    Yelp, Inc.
+    https://github.com/Yelp/detect-secrets
+
+Fork maintained by:
+    bendlikeabamboo
+    https://github.com/bendlikeabamboo/detect-secrets
+
+Both the original work and this fork are licensed under the Apache License,
+Version 2.0. See LICENSE for the full text.
+
+A summary of changes introduced by this fork is maintained in the
+"Improvements in this fork" section of README.md.

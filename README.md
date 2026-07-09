@@ -1,10 +1,12 @@
-[![Build Status](https://github.com/Yelp/detect-secrets/actions/workflows/ci.yml/badge.svg)](https://github.com/Yelp/detect-secrets/actions/workflows/ci.yml?query=branch%3Amaster++)
-[![PyPI version](https://badge.fury.io/py/detect-secrets.svg)](https://badge.fury.io/py/detect-secrets)
-[![Homebrew](https://img.shields.io/badge/dynamic/json.svg?url=https://formulae.brew.sh/api/formula/detect-secrets.json&query=$.versions.stable&label=homebrew)](https://formulae.brew.sh/formula/detect-secrets)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-ff69b4.svg)](https://github.com/Yelp/detect-secrets/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22+)
-[![AMF](https://img.shields.io/badge/Donate-Charity-orange.svg)](https://www.againstmalaria.com/donation.aspx)
+[![Build Status](https://github.com/bendlikeabamboo/detect-secrets/actions/workflows/ci.yml/badge.svg)](https://github.com/bendlikeabamboo/detect-secrets/actions/workflows/ci.yml?query=branch%3Amaster++)
+[![PyPI version](https://badge.fury.io/py/detect-secrets-plus.svg)](https://badge.fury.io/py/detect-secrets-plus)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-ff69b4.svg)](https://github.com/bendlikeabamboo/detect-secrets/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22+)
 
-# detect-secrets
+# detect-secrets-plus
+
+> A community fork of [detect-secrets](https://github.com/Yelp/detect-secrets) by Yelp, Inc.,
+> distributed under the Apache License 2.0. The import name stays `detect_secrets`, so existing
+> baselines and integrations keep working. See [Credits & License](#credits--license).
 
 ## About
 
@@ -34,6 +36,21 @@ For a look at recent changes, please see [CHANGELOG.md](CHANGELOG.md).
 If you are looking to contribute, please see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 For more detailed documentation, check out our other [documentation](docs/).
+
+### Improvements in this fork
+
+This fork keeps full baseline compatibility and focuses on making custom plugin
+and filter configuration more robust across operating systems:
+
+- **Cross-platform path handling.** Custom plugin/filter references (e.g.
+  `file://path/to/filter.py::is_secret` and Python module paths) are now parsed
+  by a single, well-tested routine (`detect_secrets/util/path.py`). This adds
+  correct handling of `file:///` absolute paths and Windows drive letters, and
+  makes symlink-aware relative path resolution safe on cross-drive setups.
+- **Clearer validation.** Misconfigured custom filters and plugins now produce
+  specific, actionable error messages instead of opaque failures.
+- **Tidy internals.** The duplicated `urlparse` logic previously spread across
+  the settings, usage, and plugin modules has been consolidated.
 
 ## Examples
 
@@ -208,15 +225,15 @@ with transient_settings({
 ## Installation
 
 ```bash
-$ pip install detect-secrets
-✨🍰✨
+$ pip install detect-secrets-plus
 ```
 
-Install via [brew](https://brew.sh/):
+This installs the `detect-secrets` and `detect-secrets-hook` console commands, and the
+importable `detect_secrets` Python package.
 
-```bash
-$ brew install detect-secrets
-```
+> Note: this is the `detect-secrets-plus` distribution. It is API- and baseline-compatible
+> with upstream `detect-secrets`, but ships under its own name on PyPI since the original is
+> published by Yelp.
 
 ## Usage
 
@@ -396,8 +413,8 @@ We recommend setting this up as a pre-commit hook. One way to do this is by usin
 ```yaml
 # .pre-commit-config.yaml
 repos:
--   repo: https://github.com/Yelp/detect-secrets
-    rev: v1.5.0
+-   repo: https://github.com/bendlikeabamboo/detect-secrets
+    rev: v1.5.1
     hooks:
     -   id: detect-secrets
         args: ['--baseline', '.secrets.baseline']
@@ -651,3 +668,15 @@ heuristics to try and prevent obvious cases of committing secrets.
 
   Ensure the file encoding of your baseline file is UTF-8.
   [More details here](https://github.com/Yelp/detect-secrets/issues/272#issuecomment-619187136).
+
+## Credits & License
+
+`detect-secrets-plus` is a fork of [detect-secrets](https://github.com/Yelp/detect-secrets),
+originally created and maintained by **Yelp, Inc.** The vast majority of this codebase is their
+work, and full credit for the original tool belongs to them and its many
+[contributors](CONTRIBUTORS.md).
+
+Both the original project and this fork are licensed under the **Apache License, Version 2.0**.
+See [LICENSE](LICENSE) for the full text and [NOTICE](NOTICE) for attribution. Per the terms of
+that license, this fork retains Yelp's copyright notices and adds its own for the modifications
+described in [Improvements in this fork](#improvements-in-this-fork).

@@ -1,3 +1,4 @@
+# detect-secrets-plus: modified from upstream Yelp/detect-secrets (Apache-2.0). See NOTICE.
 from contextlib import contextmanager
 from copy import deepcopy
 from functools import lru_cache
@@ -6,10 +7,10 @@ from typing import Any
 from typing import Dict
 from typing import Generator
 from typing import List
-from urllib.parse import urlparse
 
 from .exceptions import InvalidFile
 from .util.importlib import import_file_as_module
+from .util.path import parse_path
 
 
 @lru_cache(maxsize=1)
@@ -92,18 +93,16 @@ def cache_bust() -> None:
 
     get_filters.cache_clear()
     for path, config in get_settings().filters.items():
-        # Need to also clear the individual caches (e.g. cached regex patterns).
-        parts = urlparse(path)
-        if not parts.scheme:
-            module_path, _ = path.rsplit('.', 1)
+        parsed = parse_path(path)
+        if parsed.kind == 'module':
             try:
+                module_path, _ = path.rsplit('.', 1)
                 module = import_module(module_path)
-            except ModuleNotFoundError:
+            except (ValueError, ModuleNotFoundError):
                 continue
-        elif parts.scheme == 'file':
-            file_path = path[len('file://'):].split('::')[0]
+        elif parsed.kind == 'file':
             try:
-                module = import_file_as_module(file_path)
+                module = import_file_as_module(parsed.file_path)
             except (FileNotFoundError, InvalidFile):
                 continue
         else:
@@ -113,7 +112,6 @@ def cache_bust() -> None:
             item = getattr(module, item_key)
             try:
                 if item.__module__ != module_path:
-                    # Make sure we only clear the cache specific to the module.
                     raise AttributeError
 
                 item.cache_clear()
@@ -276,20 +274,22 @@ def get_filters() -> List:
 
     output = []
     for path, config in get_settings().filters.items():
-        parts = urlparse(path)
-        if not parts.scheme:
-            module_path, function_name = path.rsplit('.', 1)
+        parsed = parse_path(path)
+        if parsed.kind == 'module':
             try:
+                module_path, function_name = path.rsplit('.', 1)
                 function = getattr(import_module(module_path), function_name)
-            except (ModuleNotFoundError, AttributeError):
+            except (ValueError, ModuleNotFoundError, AttributeError):
                 log.warning(f'Invalid filter: {path}')
                 continue
 
-        elif parts.scheme == 'file':
-            file_path, function_name = path[len('file://'):].split('::')
+        elif parsed.kind == 'file':
+            if parsed.function_name is None:
+                log.warning(f'Invalid filter: {path}')
+                continue
 
             try:
-                function = getattr(import_file_as_module(file_path), function_name)
+                function = getattr(import_file_as_module(parsed.file_path), parsed.function_name)
             except (FileNotFoundError, InvalidFile, AttributeError):
                 log.warning(f'Invalid filter: {path}')
                 continue
@@ -298,12 +298,9 @@ def get_filters() -> List:
             log.warning(f'Invalid filter: {path}')
             continue
 
-        # We attach this metadata to the function itself, so that we don't need to
-        # compute it everytime. This will allow for dependency injection for filters.
         function.injectable_variables = set(get_injectable_variables(function))
         output.append(function)
 
-        # This is for better logging.
         function.path = path
 
     return output

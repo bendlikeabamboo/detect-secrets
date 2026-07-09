@@ -1,8 +1,8 @@
+# detect-secrets-plus: modified from upstream Yelp/detect-secrets (Apache-2.0). See NOTICE.
 import argparse
 import inspect
 import os
 from importlib import import_module
-from urllib.parse import urlparse
 
 from ... import filters
 from ...constants import VerifiedResult
@@ -10,6 +10,7 @@ from ...core.log import log
 from ...exceptions import InvalidFile
 from ...settings import get_settings
 from ...util.importlib import import_file_as_module
+from ...util.path import parse_path
 from .common import valid_path
 
 
@@ -84,31 +85,19 @@ def add_filter_options(parent: argparse.ArgumentParser) -> None:
 
 def _add_custom_filters(parser: argparse._ArgumentGroup) -> None:
     def valid_looking_paths(path: str) -> str:
-        # Expected path format:
-        #   - detect_secrets.filters.common.is_invalid_file (python import path)
-        #   - testing/custom_filters.py::is_invalid_secret (local file)
-        #   - file://testing/custom_filters.py::is_invalid_secret (local file)
-        parts = urlparse(path)
-        if not parts.scheme and '::' in path:
-            # This could be a local file, without the file schema.
-            path = 'file://' + path
-            parts = urlparse(path)
+        parsed = parse_path(path)
+        if parsed.kind == 'invalid':
+            raise argparse.ArgumentTypeError(f'{path} is not a valid filter path.')
 
-        if parts.scheme == 'file':
-            # May be local file.
-            # We do some initial pre-processing, but perform the file validation during the
-            # post-processing step.
-            components = parts.path.split('::')
-            if len(components) != 2:
+        if parsed.kind == 'file':
+            if parsed.function_name is None:
                 raise argparse.ArgumentTypeError(
                     'Did not specify function name for imported file.',
                 )
-
-            file_path = path[len('file://'):].split('::')[0]
-            if not os.path.isfile(file_path):
-                raise argparse.ArgumentTypeError(f'{file_path} is not a valid file.')
-        elif parts.scheme:
-            raise argparse.ArgumentTypeError(f'{path} is not a valid filter path.')
+            if not os.path.isfile(parsed.file_path):
+                raise argparse.ArgumentTypeError(
+                    f'{parsed.file_path} is not a valid file.',
+                )
 
         return path
 
@@ -204,9 +193,13 @@ def parse_args(args: argparse.Namespace) -> None:
 
 
 def _raise_if_custom_filter_path_is_invalid(path: str) -> None:
-    """Performs post-validation for custom filters."""
-    parts = urlparse(path)
-    if not parts.scheme:
+    parsed = parse_path(path)
+    if parsed.kind == 'invalid':
+        raise argparse.ArgumentTypeError(
+            'Invalid Python module path for custom filter.',
+        )
+
+    if parsed.kind == 'module':
         try:
             module_path, function_name = path.rsplit('.', 1)
         except ValueError:
@@ -229,19 +222,22 @@ def _raise_if_custom_filter_path_is_invalid(path: str) -> None:
         if not inspect.isfunction(function):
             raise argparse.ArgumentTypeError(f'{path} is not a filter function.')
 
-    elif parts.scheme == 'file':
-        file_path, function_name = path[len('file://'):].split('::')
-
-        try:
-            module = import_file_as_module(file_path)
-        except (FileNotFoundError, InvalidFile):
+    elif parsed.kind == 'file':
+        if parsed.function_name is None:
             raise argparse.ArgumentTypeError(
-                f'Cannot import {file_path} as custom filter.',
+                'Did not specify function name for imported file.',
             )
 
         try:
-            getattr(module, function_name)
+            module = import_file_as_module(parsed.file_path)
+        except (FileNotFoundError, InvalidFile):
+            raise argparse.ArgumentTypeError(
+                f'Cannot import {parsed.file_path} as custom filter.',
+            )
+
+        try:
+            getattr(module, parsed.function_name)
         except AttributeError:
             raise argparse.ArgumentTypeError(
-                f'No filter function named `{function_name}` found in "{file_path}".',
+                f'No filter function named `{parsed.function_name}` found in "{parsed.file_path}".',
             )

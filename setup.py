@@ -17,17 +17,20 @@ with open('README.md', encoding='utf-8') as f:
     long_description = f.read()
 
 
+# detect-secrets-plus is a community fork of Yelp's detect-secrets.
+# Upstream: https://github.com/Yelp/detect-secrets (Apache License 2.0).
+# The import package name remains `detect_secrets` for backwards compatibility;
+# only the PyPI distribution name changes to `detect-secrets-plus`.
 setup(
-    name='detect_secrets',
+    name='detect-secrets-plus',
     packages=find_packages(exclude=(['test*', 'tmp*'])),
     version=VERSION,
     description='Tool for detecting secrets in the codebase',
     long_description=long_description,
     long_description_content_type='text/markdown',
-    author='Yelp, Inc.',
-    author_email='opensource@yelp.com',
-    url='https://github.com/Yelp/detect-secrets',
-    download_url='https://github.com/Yelp/detect-secrets/archive/{}.tar.gz'.format(VERSION),
+    author='bendlikeabamboo',
+    url='https://github.com/bendlikeabamboo/detect-secrets',
+    download_url='https://github.com/bendlikeabamboo/detect-secrets/archive/{}.tar.gz'.format(VERSION),
     keywords=['secret-management', 'pre-commit', 'security', 'entropy-checks'],
     install_requires=[
         'pyyaml',

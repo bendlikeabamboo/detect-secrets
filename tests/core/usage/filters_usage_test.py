@@ -132,6 +132,24 @@ class TestCustomFilters:
         with pytest.raises(SystemExit):
             parser.parse_args(['scan', '--filter', filepath])
 
+    @staticmethod
+    @pytest.mark.parametrize(
+        'filter_path',
+        (
+            # Non-file URL scheme rejected
+            'http://x.py::fn',
+
+            # Empty function name
+            'testing/custom_filters.py::',
+
+            # Non-identifier function name
+            'testing/custom_filters.py::123',
+        ),
+    )
+    def test_invalid_filter_path_rejected(parser, filter_path):
+        with pytest.raises(SystemExit):
+            parser.parse_args(['scan', '--filter', filter_path])
+
 
 def test_disable_filter(parser):
     with mock_named_temporary_file() as f:
@@ -163,6 +181,50 @@ def test_disable_filter(parser):
             secrets.scan_file(f.name)
 
             assert secrets
+
+
+def test_filter_baseline_roundtrip(parser):
+    import json
+    import os
+    import tempfile
+
+    from detect_secrets.core import baseline
+    from detect_secrets.settings import get_filters
+
+    fd, tmpfile = tempfile.mkstemp()
+    os.close(fd)
+
+    try:
+        secrets = SecretsCollection()
+        with transient_settings({
+            'plugins_used': [{
+                'name': 'Base64HighEntropyString',
+            }],
+        }):
+            parser.parse_args([
+                'scan',
+                '--filter',
+                'testing/custom_filters.py::is_invalid_secret',
+            ])
+            secrets.scan_file('test_data/config.env')
+
+            baseline.save_to_file(secrets, tmpfile)
+
+        with open(tmpfile) as fh:
+            data = json.load(fh)
+
+        file_filters = [
+            entry for entry in data['filters_used']
+            if 'is_invalid_secret' in entry['path']
+        ]
+        assert file_filters
+
+        with transient_settings(data):
+            filters = get_filters()
+            filter_paths = [func.path for func in filters]
+            assert any('is_invalid_secret' in p for p in filter_paths)
+    finally:
+        os.unlink(tmpfile)
 
 
 @pytest.fixture
