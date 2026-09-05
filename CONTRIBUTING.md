@@ -13,45 +13,25 @@ system, and how they interact together to find secrets.
 
 ## 2. Building Your Development Environment
 
-There are several ways to spin up your virtual environment:
-
-**Casual Python Developers**:
+This project uses [uv](https://docs.astral.sh/uv/) to manage dependencies and
+virtual environments. To set up your development environment (including the
+git pre-commit hooks), run:
 
 ```bash
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements-dev.txt
+make setup
 ```
 
-**Regular Python Developers:**
+This is equivalent to:
 
 ```bash
-virtualenv --python=python3 venv
-source venv/bin/activate
-pip install -r requirements-dev.txt
+uv sync
+uv run pre-commit install --install-hooks
 ```
 
-> **Developer Note**: The main difference between this method and the former one (using Python's
-  in-built virtual environment) is that Python's `venv` module pins the `pip` version. However,
-  it doesn't matter too much if you're working on this repository alone, since `detect-secrets`
-  doesn't ship with many dependency requirements.
-
-or
+You can check to see whether you're successful by executing:
 
 ```bash
-tox -e venv
-source venv/bin/activate
-```
-
-> **Developer Note**: The benefit of this is that `tox` sets up a common development environment
-  for you. The downside is that you'll need to install `tox` first -- which if you already have,
-  you wouldn't be reading this section :)
-
-
-Whichever way you choose, you can check to see whether you're successful by executing:
-
-```bash
-python -m detect_secrets --version
+uv run detect-secrets --version
 ```
 
 ## 3. Run tests
@@ -61,7 +41,7 @@ so it's good to run tests first to make sure you have a working copy. Don't worr
 don't take long!
 
 ```bash
-$ time python -m pytest tests
+$ time uv run pytest tests
 ...
 real    0m10.113s
 user    0m6.848s
@@ -70,21 +50,28 @@ sys     0m2.486s
 
 ### Running the Entire Test Suite
 
-You can run the test suite in the interpreter of your choice (in this example, `py37`) by doing:
-
-```bash
-tox -e py37
-```
-
-This will also run the code through our series of coverage tests, `mypy` rules and other linting
-checks to enforce a consistent coding style.
-
-For a list of supported interpreters, check out `envlist` in `tox.ini`.
-
-If you wanted to run **all** interpreters (might take a while), you can also just run:
+You can run the full quality gate (test suite with coverage floors, type checking
+with `ty`, and all pre-commit hooks) by doing:
 
 ```bash
 make test
+```
+
+This runs the equivalent of:
+
+```bash
+uv run coverage run -m pytest --strict-markers tests
+uv run coverage report --include=tests/* --fail-under 99
+uv run coverage report --include=testing/* --fail-under 100
+uv run coverage report --include=detect_secrets/* --fail-under 95
+uv run ty check
+uv run pre-commit run --all-files
+```
+
+To test against a specific Python version, use:
+
+```bash
+uv sync --python 3.13
 ```
 
 ### Running a Specific Test
@@ -95,25 +82,25 @@ levels. Here are a couple of examples:
 - Running all tests related to `core/baseline.py`
 
   ```bash
-  pytest tests/core/baseline_test.py
+  uv run pytest tests/core/baseline_test.py
   ```
 
 - Running a single test class
 
   ```bash
-  pytest tests/core/baseline_test.py::TestCreate
+  uv run pytest tests/core/baseline_test.py::TestCreate
   ```
 
 - Running a single test function, inside test class
 
   ```bash
-  pytest tests/core/baseline_test.py::TestCreate::test_basic_usage
+  uv run pytest tests/core/baseline_test.py::TestCreate::test_basic_usage
   ```
 
 - Running a single root level test function
 
   ```bash
-  pytest tests/plugins/baseline_test.py::test_upgrade_succeeds
+  uv run pytest tests/plugins/baseline_test.py::test_upgrade_succeeds
   ```
 
 Generally speaking, we use test classes to group a series of related test cases together (e.g.

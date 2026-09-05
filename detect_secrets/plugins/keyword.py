@@ -24,6 +24,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 """
+
 import re
 from typing import Any
 from typing import Dict
@@ -32,52 +33,52 @@ from typing import Optional
 from typing import Pattern
 from typing import Set
 
-from ..core.potential_secret import PotentialSecret
-from ..util.filetype import determine_file_type
-from ..util.filetype import FileType
-from .base import BasePlugin
 from detect_secrets.util.code_snippet import CodeSnippet
 
+from ..core.potential_secret import PotentialSecret
+from ..util.filetype import FileType
+from ..util.filetype import determine_file_type
+from .base import BasePlugin
 
 # Note: All values here should be lowercase
 DENYLIST = (
-    'api_?key',
-    'auth_?key',
-    'service_?key',
-    'account_?key',
-    'db_?key',
-    'database_?key',
-    'priv_?key',
-    'private_?key',
-    'client_?key',
-    'db_?pass',
-    'database_?pass',
-    'key_?pass',
-    'password',
-    'passwd',
-    'pwd',
-    'secret',
-    'contraseña',
-    'contrasena',
+    "api_?key",
+    "auth_?key",
+    "service_?key",
+    "account_?key",
+    "db_?key",
+    "database_?key",
+    "priv_?key",
+    "private_?key",
+    "client_?key",
+    "db_?pass",
+    "database_?pass",
+    "key_?pass",
+    "password",
+    "passwd",
+    "pwd",
+    "secret",
+    "contraseña",
+    "contrasena",
 )
 # Includes ], ', " as closing
 CLOSING = r'[]\'"]{0,2}'
-AFFIX_REGEX = r'\w*'
-DENYLIST_REGEX = r'|'.join(DENYLIST)
+AFFIX_REGEX = r"\w*"
+DENYLIST_REGEX = r"|".join(DENYLIST)
 # Support for suffix after keyword i.e. password_secure = "value"
-DENYLIST_REGEX = r'({denylist}){suffix}'.format(
+DENYLIST_REGEX = r"({denylist}){suffix}".format(
     denylist=DENYLIST_REGEX,
     suffix=AFFIX_REGEX,
 )
 # Support for prefix and suffix with keyword, needed for reverse comparisons
 # i.e. if ("value" == my_password_secure) {}
-DENYLIST_REGEX_WITH_PREFIX = r'{prefix}{denylist}'.format(
+DENYLIST_REGEX_WITH_PREFIX = r"{prefix}{denylist}".format(
     prefix=AFFIX_REGEX,
     denylist=DENYLIST_REGEX,
 )
 # Non-greedy match
-OPTIONAL_WHITESPACE = r'\s*'
-OPTIONAL_NON_WHITESPACE = r'[^\s]{0,50}?'
+OPTIONAL_WHITESPACE = r"\s*"
+OPTIONAL_NON_WHITESPACE = r"[^\s]{0,50}?"
 QUOTE = r'[\'"`]'
 # Secret regex details:
 #   (?=[^\v\'"]*)   ->  this section match with every character except line breaks and quotes. This
@@ -93,12 +94,12 @@ QUOTE = r'[\'"`]'
 #   [^\v,\'"`]  ->  this section match with the last secret character that can be everything except
 #                   line breaks, comma, backticks or quotes. This allows to reduce the false
 #                   positives number and to prevent errors in the code snippet highlighting.
-SECRET = r'(?=[^\v\'\"]*)(?=\w+)[^\v\'\"]*[^\v,\'\"`]'
-SQUARE_BRACKETS = r'(\[[0-9]*\])'
+SECRET = r"(?=[^\v\'\"]*)(?=\w+)[^\v\'\"]*[^\v,\'\"`]"
+SQUARE_BRACKETS = r"(\[[0-9]*\])"
 
 FOLLOWED_BY_COLON_EQUAL_SIGNS_REGEX = re.compile(
     # e.g. my_password := "bar" or my_password := bar
-    r'{denylist}({closing})?{whitespace}:={whitespace}({quote}?)({secret})(\3)'.format(
+    r"{denylist}({closing})?{whitespace}:={whitespace}({quote}?)({secret})(\3)".format(
         denylist=DENYLIST_REGEX,
         closing=CLOSING,
         quote=QUOTE,
@@ -109,7 +110,7 @@ FOLLOWED_BY_COLON_EQUAL_SIGNS_REGEX = re.compile(
 )
 FOLLOWED_BY_COLON_REGEX = re.compile(
     # e.g. api_key: foo
-    r'{denylist}({closing})?:{whitespace}({quote}?)({secret})(\3)'.format(
+    r"{denylist}({closing})?:{whitespace}({quote}?)({secret})(\3)".format(
         denylist=DENYLIST_REGEX,
         closing=CLOSING,
         quote=QUOTE,
@@ -120,7 +121,7 @@ FOLLOWED_BY_COLON_REGEX = re.compile(
 )
 FOLLOWED_BY_COLON_QUOTES_REQUIRED_REGEX = re.compile(
     # e.g. api_key: "foo"
-    r'{denylist}({closing})?:({whitespace})({quote})({secret})(\4)'.format(
+    r"{denylist}({closing})?:({whitespace})({quote})({secret})(\4)".format(
         denylist=DENYLIST_REGEX,
         closing=CLOSING,
         quote=QUOTE,
@@ -156,7 +157,7 @@ FOLLOWED_BY_EQUAL_SIGNS_REGEX = re.compile(
     # or my_password !== "bar"
     # e.g. my_password == 'bar' or my_password != 'bar' or my_password === 'bar'
     # or my_password !== 'bar'
-    r'{denylist}({closing})?{whitespace}(={{1,3}}|!==?){whitespace}({quote}?)({secret})(\4)'.format(  # noqa: E501
+    r"{denylist}({closing})?{whitespace}(={{1,3}}|!==?){whitespace}({quote}?)({secret})(\4)".format(  # noqa: E501
         denylist=DENYLIST_REGEX,
         closing=CLOSING,
         quote=QUOTE,
@@ -171,7 +172,7 @@ FOLLOWED_BY_EQUAL_SIGNS_QUOTES_REQUIRED_REGEX = re.compile(
     # or my_password !== "bar"
     # e.g. my_password == 'bar' or my_password != 'bar' or my_password === 'bar'
     # or my_password !== 'bar'
-    r'{denylist}({closing})?{whitespace}(={{1,3}}|!==?){whitespace}({quote})({secret})(\4)'.format(  # noqa: E501
+    r"{denylist}({closing})?{whitespace}(={{1,3}}|!==?){whitespace}({quote})({secret})(\4)".format(  # noqa: E501
         denylist=DENYLIST_REGEX,
         closing=CLOSING,
         quote=QUOTE,
@@ -185,7 +186,7 @@ PRECEDED_BY_EQUAL_COMPARISON_SIGNS_QUOTES_REQUIRED_REGEX = re.compile(
     # or "bar" !== my_password
     # e.g. 'bar' == my_password or 'bar' != my_password or 'bar' === my_password
     # or 'bar' !== my_password
-    r'({quote})({secret})(\1){whitespace}[!=]{{2,3}}{whitespace}{denylist}'.format(
+    r"({quote})({secret})(\1){whitespace}[!=]{{2,3}}{whitespace}{denylist}".format(
         denylist=DENYLIST_REGEX_WITH_PREFIX,
         quote=QUOTE,
         whitespace=OPTIONAL_WHITESPACE,
@@ -194,7 +195,7 @@ PRECEDED_BY_EQUAL_COMPARISON_SIGNS_QUOTES_REQUIRED_REGEX = re.compile(
 )
 FOLLOWED_BY_QUOTES_AND_SEMICOLON_REGEX = re.compile(
     # e.g. private_key "something";
-    r'{denylist}{nonWhitespace}{whitespace}({quote})({secret})(\2);'.format(
+    r"{denylist}{nonWhitespace}{whitespace}({quote})({secret})(\2);".format(
         denylist=DENYLIST_REGEX,
         nonWhitespace=OPTIONAL_NON_WHITESPACE,
         quote=QUOTE,
@@ -205,7 +206,7 @@ FOLLOWED_BY_QUOTES_AND_SEMICOLON_REGEX = re.compile(
 )
 FOLLOWED_BY_ARROW_FUNCTION_SIGN_QUOTES_REQUIRED_REGEX = re.compile(
     # e.g. my_password => "bar" or my_password => bar
-    r'{denylist}({closing})?{whitespace}=>?{whitespace}({quote})({secret})(\3)'.format(
+    r"{denylist}({closing})?{whitespace}=>?{whitespace}({quote})({secret})(\3)".format(
         denylist=DENYLIST_REGEX,
         closing=CLOSING,
         quote=QUOTE,
@@ -266,7 +267,8 @@ class KeywordDetector(BasePlugin):
 
     This checks if denylisted keywords are present in the analyzed string.
     """
-    secret_type = 'Secret Keyword'
+
+    secret_type = "Secret Keyword"
 
     def __init__(self, keyword_exclude: Optional[str] = None) -> None:
         self.keyword_exclude = None
@@ -307,11 +309,13 @@ class KeywordDetector(BasePlugin):
         filename: str,
         line: str,
         line_number: int = 0,
-        context: CodeSnippet = None,
+        context: Optional[CodeSnippet] = None,
         **kwargs: Any,
     ) -> Set[PotentialSecret]:
         filetype = determine_file_type(filename)
-        denylist_regex_to_group = REGEX_BY_FILETYPE.get(filetype, QUOTES_REQUIRED_DENYLIST_REGEX_TO_GROUP)  # noqa: E501
+        denylist_regex_to_group = REGEX_BY_FILETYPE.get(
+            filetype, QUOTES_REQUIRED_DENYLIST_REGEX_TO_GROUP
+        )  # noqa: E501
         return super().analyze_line(
             filename=filename,
             line=line,
@@ -322,10 +326,6 @@ class KeywordDetector(BasePlugin):
 
     def json(self) -> Dict[str, Any]:
         return {
-            'keyword_exclude': (
-                self.keyword_exclude.pattern
-                if self.keyword_exclude
-                else ''
-            ),
+            "keyword_exclude": (self.keyword_exclude.pattern if self.keyword_exclude else ""),
             **super().json(),
         }

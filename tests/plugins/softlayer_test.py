@@ -4,122 +4,137 @@ import pytest
 import responses
 
 from detect_secrets.constants import VerifiedResult
-from detect_secrets.plugins.softlayer import find_username
 from detect_secrets.plugins.softlayer import SoftlayerDetector
+from detect_secrets.plugins.softlayer import find_username
 from detect_secrets.util.code_snippet import get_code_snippet
 
-SL_USERNAME = 'test@testy.test'
-SL_TOKEN = 'abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234'
+SL_USERNAME = "test@testy.test"
+SL_TOKEN = "abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234"
 
 
 class TestSoftlayerDetector:
-
     @pytest.mark.parametrize(
-        'payload, should_flag',
+        "payload, should_flag",
         [
             ('--softlayer-api-key "{sl_token}"'.format(sl_token=SL_TOKEN), True),
             ('--softlayer-api-key="{sl_token}"'.format(sl_token=SL_TOKEN), True),
-            ('--softlayer-api-key {sl_token}'.format(sl_token=SL_TOKEN), True),
-            ('--softlayer-api-key={sl_token}'.format(sl_token=SL_TOKEN), True),
-            ('http://api.softlayer.com/soap/v3/{sl_token}'.format(sl_token=SL_TOKEN), True),
-            ('http://api.softlayer.com/soap/v3.1/{sl_token}'.format(sl_token=SL_TOKEN), True),
-            ('softlayer_api_key: {sl_token}'.format(sl_token=SL_TOKEN), True),
-            ('softlayer-key : {sl_token}'.format(sl_token=SL_TOKEN), True),
+            ("--softlayer-api-key {sl_token}".format(sl_token=SL_TOKEN), True),
+            ("--softlayer-api-key={sl_token}".format(sl_token=SL_TOKEN), True),
+            ("http://api.softlayer.com/soap/v3/{sl_token}".format(sl_token=SL_TOKEN), True),
+            ("http://api.softlayer.com/soap/v3.1/{sl_token}".format(sl_token=SL_TOKEN), True),
+            ("softlayer_api_key: {sl_token}".format(sl_token=SL_TOKEN), True),
+            ("softlayer-key : {sl_token}".format(sl_token=SL_TOKEN), True),
             ('SOFTLAYER-API-KEY : "{sl_token}"'.format(sl_token=SL_TOKEN), True),
             ('"softlayer_api_key" : "{sl_token}"'.format(sl_token=SL_TOKEN), True),
             ('softlayer-api-key: "{sl_token}"'.format(sl_token=SL_TOKEN), True),
             ('"softlayer_api_key": "{sl_token}"'.format(sl_token=SL_TOKEN), True),
             ('SOFTLAYER_API_KEY:"{sl_token}"'.format(sl_token=SL_TOKEN), True),
-            ('softlayer-key:{sl_token}'.format(sl_token=SL_TOKEN), True),
+            ("softlayer-key:{sl_token}".format(sl_token=SL_TOKEN), True),
             ('softlayer_key:"{sl_token}"'.format(sl_token=SL_TOKEN), True),
             ('"softlayer_api_key":"{sl_token}"'.format(sl_token=SL_TOKEN), True),
-            ('softlayerapikey= {sl_token}'.format(sl_token=SL_TOKEN), True),
+            ("softlayerapikey= {sl_token}".format(sl_token=SL_TOKEN), True),
             ('softlayer_api_key= "{sl_token}"'.format(sl_token=SL_TOKEN), True),
-            ('SOFTLAYERAPIKEY={sl_token}'.format(sl_token=SL_TOKEN), True),
+            ("SOFTLAYERAPIKEY={sl_token}".format(sl_token=SL_TOKEN), True),
             ('softlayer_api_key="{sl_token}"'.format(sl_token=SL_TOKEN), True),
-            ('sl_api_key: {sl_token}'.format(sl_token=SL_TOKEN), True),
-            ('SLAPIKEY : {sl_token}'.format(sl_token=SL_TOKEN), True),
+            ("sl_api_key: {sl_token}".format(sl_token=SL_TOKEN), True),
+            ("SLAPIKEY : {sl_token}".format(sl_token=SL_TOKEN), True),
             ('sl_apikey : "{sl_token}"'.format(sl_token=SL_TOKEN), True),
             ('"sl_api_key" : "{sl_token}"'.format(sl_token=SL_TOKEN), True),
             ('sl-key: "{sl_token}"'.format(sl_token=SL_TOKEN), True),
             ('"sl_api_key": "{sl_token}"'.format(sl_token=SL_TOKEN), True),
             ('sl_api_key:"{sl_token}"'.format(sl_token=SL_TOKEN), True),
-            ('sl_api_key:{sl_token}'.format(sl_token=SL_TOKEN), True),
+            ("sl_api_key:{sl_token}".format(sl_token=SL_TOKEN), True),
             ('sl-api-key:"{sl_token}"'.format(sl_token=SL_TOKEN), True),
             ('"sl_api_key":"{sl_token}"'.format(sl_token=SL_TOKEN), True),
-            ('sl_key= {sl_token}'.format(sl_token=SL_TOKEN), True),
+            ("sl_key= {sl_token}".format(sl_token=SL_TOKEN), True),
             ('sl_api_key= "{sl_token}"'.format(sl_token=SL_TOKEN), True),
-            ('sl-api-key={sl_token}'.format(sl_token=SL_TOKEN), True),
+            ("sl-api-key={sl_token}".format(sl_token=SL_TOKEN), True),
             ('slapi_key="{sl_token}"'.format(sl_token=SL_TOKEN), True),
-            ('slapikey:= {sl_token}'.format(sl_token=SL_TOKEN), True),
-            ('softlayer_api_key := {sl_token}'.format(sl_token=SL_TOKEN), True),
+            ("slapikey:= {sl_token}".format(sl_token=SL_TOKEN), True),
+            ("softlayer_api_key := {sl_token}".format(sl_token=SL_TOKEN), True),
             ('sl_api_key := "{sl_token}"'.format(sl_token=SL_TOKEN), True),
             ('"softlayer_key" := "{sl_token}"'.format(sl_token=SL_TOKEN), True),
             ('sl_api_key: "{sl_token}"'.format(sl_token=SL_TOKEN), True),
             ('"softlayer_api_key":= "{sl_token}"'.format(sl_token=SL_TOKEN), True),
             ('sl-api-key:="{sl_token}"'.format(sl_token=SL_TOKEN), True),
-            ('softlayer_api_key:={sl_token}'.format(sl_token=SL_TOKEN), True),
+            ("softlayer_api_key:={sl_token}".format(sl_token=SL_TOKEN), True),
             ('slapikey:"{sl_token}"'.format(sl_token=SL_TOKEN), True),
             ('"softlayer_api_key":="{sl_token}"'.format(sl_token=SL_TOKEN), True),
-            ('sl-api-key:= {sl_token}'.format(sl_token=SL_TOKEN), True),
+            ("sl-api-key:= {sl_token}".format(sl_token=SL_TOKEN), True),
             ('softlayer_key:= "{sl_token}"'.format(sl_token=SL_TOKEN), True),
-            ('sl_api_key={sl_token}'.format(sl_token=SL_TOKEN), True),
+            ("sl_api_key={sl_token}".format(sl_token=SL_TOKEN), True),
             ('softlayer_api_key:="{sl_token}"'.format(sl_token=SL_TOKEN), True),
             ('softlayer_password = "{sl_token}"'.format(sl_token=SL_TOKEN), True),
             ('sl_pass="{sl_token}"'.format(sl_token=SL_TOKEN), True),
-            ('softlayer-pwd = {sl_token}'.format(sl_token=SL_TOKEN), True),
+            ("softlayer-pwd = {sl_token}".format(sl_token=SL_TOKEN), True),
             ('softlayer_api_key="%s" % SL_API_KEY_ENV', False),
             ('sl_api_key: "%s" % <softlayer_api_key>', False),
             ('SOFTLAYER_APIKEY: "insert_key_here"', False),
             ('sl-apikey: "insert_key_here"', False),
-            ('softlayer-key:=afakekey', False),
+            ("softlayer-key:=afakekey", False),
             ('fake-softlayer-key= "not_long_enough"', False),
         ],
     )
     def test_analyze_line(self, payload, should_flag):
         logic = SoftlayerDetector()
 
-        output = logic.analyze_line(filename='mock_filename', line=payload)
+        output = logic.analyze_line(filename="mock_filename", line=payload)
         assert len(output) == (1 if should_flag else 0)
 
     @responses.activate
     def test_verify_invalid_secret(self):
         responses.add(
-            responses.GET, 'https://api.softlayer.com/rest/v3/SoftLayer_Account.json',
-            json={'error': 'Access denied. '}, status=401,
+            responses.GET,
+            "https://api.softlayer.com/rest/v3/SoftLayer_Account.json",
+            json={"error": "Access denied. "},
+            status=401,
         )
 
-        assert SoftlayerDetector().verify(
-            SL_TOKEN,
-            get_code_snippet([f'softlayer_username={SL_USERNAME}'], 1),
-        ) == VerifiedResult.VERIFIED_FALSE
+        assert (
+            SoftlayerDetector().verify(
+                SL_TOKEN,
+                get_code_snippet([f"softlayer_username={SL_USERNAME}"], 1),
+            )
+            == VerifiedResult.VERIFIED_FALSE
+        )
 
     @responses.activate
     def test_verify_valid_secret(self):
         responses.add(
-            responses.GET, 'https://api.softlayer.com/rest/v3/SoftLayer_Account.json',
-            json={'id': 1}, status=200,
+            responses.GET,
+            "https://api.softlayer.com/rest/v3/SoftLayer_Account.json",
+            json={"id": 1},
+            status=200,
         )
-        assert SoftlayerDetector().verify(
-            SL_TOKEN,
-            get_code_snippet([f'softlayer_username={SL_USERNAME}'], 1),
-        ) == VerifiedResult.VERIFIED_TRUE
+        assert (
+            SoftlayerDetector().verify(
+                SL_TOKEN,
+                get_code_snippet([f"softlayer_username={SL_USERNAME}"], 1),
+            )
+            == VerifiedResult.VERIFIED_TRUE
+        )
 
     @responses.activate
     def test_verify_unverified_secret(self):
-        assert SoftlayerDetector().verify(
-            SL_TOKEN,
-            get_code_snippet([f'softlayer_username={SL_USERNAME}'], 1),
-        ) == VerifiedResult.UNVERIFIED
+        assert (
+            SoftlayerDetector().verify(
+                SL_TOKEN,
+                get_code_snippet([f"softlayer_username={SL_USERNAME}"], 1),
+            )
+            == VerifiedResult.UNVERIFIED
+        )
 
     def test_verify_no_secret(self):
-        assert SoftlayerDetector().verify(
-            SL_TOKEN,
-            get_code_snippet([f'no_un={SL_USERNAME}'], 1),
-        ) == VerifiedResult.UNVERIFIED
+        assert (
+            SoftlayerDetector().verify(
+                SL_TOKEN,
+                get_code_snippet([f"no_un={SL_USERNAME}"], 1),
+            )
+            == VerifiedResult.UNVERIFIED
+        )
 
     @pytest.mark.parametrize(
-        'content, expected_output',
+        "content, expected_output",
         (
             (
                 textwrap.dedent("""
@@ -129,7 +144,6 @@ class TestSoftlayerDetector:
                 ),
                 [SL_USERNAME],
             ),
-
             # With quotes
             (
                 textwrap.dedent("""
@@ -139,7 +153,6 @@ class TestSoftlayerDetector:
                 ),
                 [SL_USERNAME],
             ),
-
             # multiple candidates
             (
                 textwrap.dedent("""
@@ -149,15 +162,15 @@ class TestSoftlayerDetector:
                     softlayer-uname: {}
                 """)[1:-1].format(
                     SL_USERNAME,
-                    'test2@testy.test',
-                    'test3@testy.testy',
-                    'notanemail',
+                    "test2@testy.test",
+                    "test3@testy.testy",
+                    "notanemail",
                 ),
                 [
                     SL_USERNAME,
-                    'test2@testy.test',
-                    'test3@testy.testy',
-                    'notanemail',
+                    "test2@testy.test",
+                    "test3@testy.testy",
+                    "notanemail",
                 ],
             ),
         ),

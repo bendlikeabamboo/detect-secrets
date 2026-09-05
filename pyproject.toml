@@ -1,0 +1,107 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "detect-secrets-plus"
+description = "Tool for detecting secrets in the codebase"
+readme = "README.md"
+license = "Apache-2.0"
+requires-python = ">=3.9"
+authors = [
+    { name = "bendlikeabamboo" },
+]
+keywords = ["secret-management", "pre-commit", "security", "entropy-checks"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Intended Audience :: Developers",
+    "Topic :: Software Development",
+    "Topic :: Utilities",
+    "Environment :: Console",
+    "Operating System :: OS Independent",
+    "Development Status :: 5 - Production/Stable",
+    "Typing :: Typed",
+]
+dynamic = ["version"]
+dependencies = [
+    "pyyaml",
+    "requests",
+]
+
+[project.optional-dependencies]
+word_list = ["pyahocorasick"]
+gibberish = ["gibberish-detector"]
+
+[project.urls]
+Homepage = "https://github.com/bendlikeabamboo/detect-secrets"
+
+[project.scripts]
+detect-secrets = "detect_secrets.main:main"
+detect-secrets-hook = "detect_secrets.pre_commit_hook:main"
+
+[dependency-groups]
+dev = [
+    "coverage",
+    "gibberish-detector",
+    "pre-commit",
+    "pyahocorasick",
+    "pytest",
+    "responses",
+    "ruff",
+    "ty",
+    "unidiff",
+]
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+include = ["detect_secrets*"]
+
+[tool.setuptools.package-data]
+detect_secrets = ["py.typed"]
+
+[tool.setuptools.dynamic]
+version = { attr = "detect_secrets.__version__.VERSION" }
+
+[tool.ruff]
+line-length = 100
+target-version = "py39"
+extend-exclude = ["test_data"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I"]
+
+[tool.ruff.lint.isort]
+force-single-line = true
+
+[tool.ty]
+src.include = ["detect_secrets", "testing"]
+
+[tool.ty.environment]
+python-version = "3.9"
+
+[tool.ty.rules]
+# Plugins intentionally extend `verify` with a required `context` parameter
+# (see the `# type: ignore[override]` comments on those definitions).
+invalid-method-override = "ignore"
+
+[[tool.ty.overrides]]
+# `CustomPath` fields are optional until a `kind == "file"`/`"module"` check
+# narrows them, which the type checker cannot express.
+include = ["detect_secrets/settings.py", "detect_secrets/core/usage/filters.py"]
+[tool.ty.overrides.rules]
+invalid-argument-type = "ignore"
+
+[[tool.ty.overrides]]
+# unidiff types `target_line_no` as `int | None`, but only added lines
+# (`line.is_added`) are collected, which always carry a target line number.
+include = ["detect_secrets/core/scan.py"]
+[tool.ty.overrides.rules]
+invalid-yield = "ignore"
+
+[[tool.ty.overrides]]
+# `pyahocorasick` is an optional extra without type stubs.
+include = ["detect_secrets/filters/wordlist.py"]
+[tool.ty.overrides.rules]
+unresolved-import = "ignore"

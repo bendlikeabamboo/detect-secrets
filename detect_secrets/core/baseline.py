@@ -2,19 +2,19 @@ import json
 import time
 from typing import Any
 from typing import Callable
-from typing import cast
 from typing import Dict
 from typing import List
 from typing import Optional
 from typing import Union
+from typing import cast
 
-from . import upgrades
 from ..__version__ import VERSION
 from ..exceptions import UnableToReadBaselineError
 from ..settings import configure_settings_from_baseline
 from ..settings import get_settings
 from ..util.importlib import import_modules_from_package
 from ..util.semver import Version
+from . import upgrades
 from .scan import get_files_to_scan
 from .secrets_collection import SecretsCollection
 
@@ -22,13 +22,13 @@ from .secrets_collection import SecretsCollection
 def create(
     *paths: str,
     should_scan_all_files: bool = False,
-    root: str = '',
+    root: str = "",
     num_processors: Optional[int] = None,
 ) -> SecretsCollection:
     """Scans all the files recursively in path to initialize a baseline."""
     kwargs = {}
     if num_processors:
-        kwargs['num_processors'] = num_processors
+        kwargs["num_processors"] = num_processors
 
     secrets = SecretsCollection(root=root)
     secrets.scan_files(
@@ -39,7 +39,7 @@ def create(
     return secrets
 
 
-def load(baseline: Dict[str, Any], filename: str = '') -> SecretsCollection:
+def load(baseline: Dict[str, Any], filename: str = "") -> SecretsCollection:
     """
     With a given baseline file, load all settings and discovered secrets from it.
 
@@ -66,25 +66,23 @@ def load_from_file(filename: str) -> Dict[str, Any]:
 
 def format_for_output(secrets: SecretsCollection, is_slim_mode: bool = False) -> Dict[str, Any]:
     output = {
-        'version': VERSION,
-
+        "version": VERSION,
         # This will populate settings of filters and plugins,
         **get_settings().json(),
-
-        'results': secrets.json(),
+        "results": secrets.json(),
     }
 
     if not is_slim_mode:
-        output['generated_at'] = time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())
+        output["generated_at"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
     else:
         # NOTE: This has a nice little side effect of keeping it ordered by line number,
         # even though we don't output it.
         for filename, secret_list in cast(
             Dict[str, List[Dict[str, Any]]],
-            output['results'],
+            output["results"],
         ).items():
             for secret_dict in secret_list:
-                secret_dict.pop('line_number')
+                secret_dict.pop("line_number")
 
     return output
 
@@ -92,7 +90,7 @@ def format_for_output(secrets: SecretsCollection, is_slim_mode: bool = False) ->
 def save_to_file(
     secrets: Union[SecretsCollection, Dict[str, Any]],
     filename: str,
-) -> None:    # pragma: no cover
+) -> None:  # pragma: no cover
     """
     :param secrets: if this is a SecretsCollection, it will output the baseline in its latest
         format. Otherwise, you should pass in a dictionary to this function, to manually
@@ -108,8 +106,8 @@ def save_to_file(
     if isinstance(secrets, SecretsCollection):
         output = format_for_output(secrets)
 
-    with open(filename, 'w') as f:
-        f.write(json.dumps(output, indent=2) + '\n')
+    with open(filename, "w") as f:
+        f.write(json.dumps(output, indent=2) + "\n")
 
 
 def upgrade(baseline: Dict[str, Any]) -> Dict[str, Any]:
@@ -117,7 +115,7 @@ def upgrade(baseline: Dict[str, Any]) -> Dict[str, Any]:
     Baselines will eventually require format changes. This function is responsible for upgrading
     an older baseline to the latest version.
     """
-    baseline_version = Version(baseline['version'])
+    baseline_version = Version(baseline["version"])
     if baseline_version >= Version(VERSION):
         return baseline
 
@@ -130,17 +128,17 @@ def upgrade(baseline: Dict[str, Any]) -> Dict[str, Any]:
     for module in modules:
         module.upgrade(new_baseline)
 
-    new_baseline['version'] = VERSION
+    new_baseline["version"] = VERSION
     return new_baseline
 
 
 def _is_relevant_upgrade_module(current_version: Version) -> Callable:
     def wrapped(module_path: str) -> bool:
         # This converts `v1_0` to `1.0`
-        affected_version_string = module_path.rsplit('.', 1)[-1].lstrip('v').replace('_', '.')
+        affected_version_string = module_path.rsplit(".", 1)[-1].lstrip("v").replace("_", ".")
 
         # Patch version doesn't matter, because patches should not require baseline bumps.
-        affected_version = Version(f'{affected_version_string}.0')
+        affected_version = Version(f"{affected_version_string}.0")
 
         return current_version < affected_version
 

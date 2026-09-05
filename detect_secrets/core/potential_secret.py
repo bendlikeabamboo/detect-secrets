@@ -51,7 +51,7 @@ class PotentialSecret:
         # If two PotentialSecrets have the same values for these fields,
         # they are considered equal. Note that line numbers aren't included
         # in this, because line numbers are subject to change.
-        self.fields_to_compare = ['filename', 'secret_hash', 'type']
+        self.fields_to_compare = ["filename", "secret_hash", "type"]
 
     def set_secret(self, secret: str) -> None:
         self.secret_hash: str = self.hash_secret(secret)
@@ -69,46 +69,46 @@ class PotentialSecret:
     @staticmethod
     def hash_secret(secret: str) -> str:
         """This offers a way to coherently test this class, without mocking self.secret_hash."""
-        return hashlib.sha1(secret.encode('utf-8')).hexdigest()
+        return hashlib.sha1(secret.encode("utf-8")).hexdigest()
 
     @classmethod
-    def load_secret_from_dict(cls, data: Dict[str, Union[str, int, bool]]) -> 'PotentialSecret':
+    def load_secret_from_dict(cls, data: Dict[str, Union[str, int, bool]]) -> "PotentialSecret":
         """Custom JSON decoder"""
         kwargs: Dict[str, Any] = {
-            'type': str(data['type']),
-            'filename': convert_local_os_path(str(data['filename'])),
-            'secret': 'will be replaced',
+            "type": str(data["type"]),
+            "filename": convert_local_os_path(str(data["filename"])),
+            "secret": "will be replaced",
         }
 
         # Optional parameters
         for parameter in {
-            'line_number',
-            'is_secret',
-            'is_verified',
+            "line_number",
+            "is_secret",
+            "is_verified",
         }:
             if parameter in data:
                 kwargs[parameter] = data[parameter]
 
         output = cls(**kwargs)
         output.secret_value = None
-        output.secret_hash = str(data['hashed_secret'])
+        output.secret_hash = str(data["hashed_secret"])
 
         return output
 
     def json(self) -> Dict[str, Union[str, int, bool]]:
         """Custom JSON encoder"""
         attributes: Dict[str, Union[str, int, bool]] = {
-            'type': self.type,
-            'filename': self.filename,
-            'hashed_secret': self.secret_hash,
-            'is_verified': self.is_verified,
+            "type": self.type,
+            "filename": self.filename,
+            "hashed_secret": self.secret_hash,
+            "is_verified": self.is_verified,
         }
 
-        if hasattr(self, 'line_number') and self.line_number:
-            attributes['line_number'] = self.line_number
+        if hasattr(self, "line_number") and self.line_number:
+            attributes["line_number"] = self.line_number
 
-        if hasattr(self, 'is_secret') and self.is_secret is not None:
-            attributes['is_secret'] = self.is_secret
+        if hasattr(self, "is_secret") and self.is_secret is not None:
+            attributes["is_secret"] = self.is_secret
 
         return attributes
 
@@ -117,8 +117,7 @@ class PotentialSecret:
             return NotImplemented
 
         return all(
-            getattr(self, field) == getattr(other, field)
-            for field in self.fields_to_compare
+            getattr(self, field) == getattr(other, field) for field in self.fields_to_compare
         )
 
     def __ne__(self, other: Any) -> bool:
@@ -126,14 +125,11 @@ class PotentialSecret:
 
     def __hash__(self) -> int:
         return hash(
-            tuple(
-                getattr(self, x)
-                for x in self.fields_to_compare
-            ),
+            tuple(getattr(self, x) for x in self.fields_to_compare),
         )
 
     def __str__(self) -> str:
         return (
-            f'Secret Type: {colorize(self.type, AnsiColor.BOLD)}\n'
-            f'Location:    {self.filename}:{self.line_number}\n'
+            f"Secret Type: {colorize(self.type, AnsiColor.BOLD)}\n"
+            f"Location:    {self.filename}:{self.line_number}\n"
         )

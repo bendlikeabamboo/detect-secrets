@@ -21,7 +21,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     except ValueError:
         return 1
 
-    if args.verbose:    # pragma: no cover
+    if args.verbose:  # pragma: no cover
         log.set_debug_level(args.verbose)
 
     # Find all secrets in files to be committed
@@ -57,15 +57,15 @@ def main(argv: Optional[List[str]] = None) -> int:
                 old_baseline = json.loads(f.read())
 
             # Override the results, because this has been updated in `should_update_baseline`.
-            old_baseline['results'] = args.baseline.json()
+            old_baseline["results"] = args.baseline.json()
 
             args.baseline = baseline.upgrade(old_baseline)
 
         baseline.save_to_file(args.baseline, filename=args.baseline_filename)
         print(
-            'The baseline file was updated.\n'
-            'Probably to keep line numbers of secrets up-to-date.\n'
-            'Please `git add {}`, thank you.\n\n'.format(args.baseline_filename),
+            "The baseline file was updated.\n"
+            "Probably to keep line numbers of secrets up-to-date.\n"
+            "Please `git add {}`, thank you.\n\n".format(args.baseline_filename),
         )
         return 3
 
@@ -93,8 +93,7 @@ def raise_exception_if_baseline_file_is_unstaged(filename: str) -> None:
     """
     if filename in git.get_changed_but_unstaged_files():
         print(
-            f'Your baseline file ({filename}) is unstaged.\n'
-            f'`git add {filename}` to fix this.',
+            f"Your baseline file ({filename}) is unstaged.\n`git add {filename}` to fix this.",
         )
         raise ValueError
 
@@ -108,7 +107,7 @@ def should_update_baseline(
     """
     :returns: True if changes occurred.
     """
-    original = SecretsCollection.load_from_baseline({'results': secrets.json()})
+    original = SecretsCollection.load_from_baseline({"results": secrets.json()})
 
     secrets.trim(scanned_results=scanned_results, filelist=filelist)
 
@@ -126,7 +125,7 @@ def pretty_print_diagnostics(secrets: SecretsCollection, width: int = 80) -> Non
     print(
         textwrap.fill(
             color.colorize(
-                'ERROR: Potential secrets about to be committed to git repo!',
+                "ERROR: Potential secrets about to be committed to git repo!",
                 color.AnsiColor.RED,
             ),
             width=width,
@@ -139,33 +138,34 @@ def pretty_print_diagnostics(secrets: SecretsCollection, width: int = 80) -> Non
         print(secret)
 
     # Display the number of detected secrets
-    print(f'\nTotal secrets detected: {len(secrets)}')
+    print(f"\nTotal secrets detected: {len(secrets)}")
 
     # Display mitigation suggestions
-    print('Possible mitigations:')
+    print("Possible mitigations:")
     wrapper = textwrap.TextWrapper(
-        initial_indent='  - ',
-        subsequent_indent='    ',
+        initial_indent="  - ",
+        subsequent_indent="    ",
         width=width,
     )
     for suggestion in [
-        'For information about putting your secrets in a safer place, '
-        'please ask {0}'.format(os.environ.get('DETECT_SECRETS_SECURITY_TEAM', 'in #security')),
-
-        'Mark false positives with an inline '
-        '`{0}` comment'.format(color.colorize('pragma: allowlist secret', color.AnsiColor.BOLD)),
+        "For information about putting your secrets in a safer place, please ask {0}".format(
+            os.environ.get("DETECT_SECRETS_SECURITY_TEAM", "in #security")
+        ),
+        "Mark false positives with an inline `{0}` comment".format(
+            color.colorize("pragma: allowlist secret", color.AnsiColor.BOLD)
+        ),
     ]:
         print(wrapper.fill(suggestion))
 
     print()
     print(
         textwrap.fill(
-            'If a secret has already been committed, visit '
-            'https://help.github.com/articles/removing-sensitive-data-from-a-repository',
+            "If a secret has already been committed, visit "
+            "https://help.github.com/articles/removing-sensitive-data-from-a-repository",
             width=width,
         ),
     )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

@@ -39,16 +39,17 @@ another script, you will need to configure the plugins yourself.
 ```python
 from detect_secrets.core import baseline
 from detect_secrets.settings import transient_settings
+
 config = {
-    'plugins_used': [
+    "plugins_used": [
         {
-            'name': 'AWSKeyDetector',
+            "name": "AWSKeyDetector",
         },
     ],
 }
 
 with transient_settings(config):
-    secrets = baseline.create('.')
+    secrets = baseline.create(".")
 ```
 
 TODO: Make it easier to "add all plugins" as a non-CLI user.

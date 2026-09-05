@@ -20,9 +20,9 @@ def main():
 
     # Get data from baseline
     if args.baseline:
-        config = args.baseline['config']
-        args.mode = config['mode']
-        args.length = config['length']
+        config = args.baseline["config"]
+        args.mode = config["mode"]
+        args.length = config["length"]
 
     mode = None
     for case in TestCase:
@@ -43,9 +43,9 @@ def main():
 
     if not args.baseline:
         temp = json.loads(output)
-        temp['config'] = {
-            'mode': mode.name,
-            'length': args.length,
+        temp["config"] = {
+            "mode": mode.name,
+            "length": args.length,
         }
 
         output = json.dumps(temp)
@@ -56,37 +56,31 @@ def main():
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        '--harakiri',
+        "--harakiri",
         default=30,
         type=assert_positive(float),
-        help=(
-            'Specifies an upper bound for number of seconds to wait for '
-            'each test.'
-        ),
+        help=("Specifies an upper bound for number of seconds to wait for each test."),
     )
     parser.add_argument(
-        '--baseline',
+        "--baseline",
         type=assert_valid_file,
         help=(
-            'Specifies test config file to run. If this is provided, '
-            'all config options will be referenced from this file.'
+            "Specifies test config file to run. If this is provided, "
+            "all config options will be referenced from this file."
         ),
     )
     parser.add_argument(
-        '-m',
-        '--mode',
-        choices=[
-            value.name
-            for value in TestCase
-        ],
+        "-m",
+        "--mode",
+        choices=[value.name for value in TestCase],
         required=True,
-        help='Specifies the type of content to generate.',
+        help="Specifies the type of content to generate.",
     )
     parser.add_argument(
-        '-L',
-        '--length',
+        "-L",
+        "--length",
         type=assert_positive(int),
-        help='Length of test case content.',
+        help="Length of test case content.",
     )
 
     return parser.parse_args()
@@ -97,7 +91,7 @@ def assert_positive(type):
         value = type(string)
         if value <= 0:
             raise argparse.ArgumentTypeError(
-                '{} must be a positive {}.'.format(
+                "{} must be a positive {}.".format(
                     string,
                     type.__name__,
                 ),
@@ -111,7 +105,7 @@ def assert_positive(type):
 def assert_valid_file(string):
     if not os.path.isfile(string):
         raise argparse.ArgumentTypeError(
-            '{} must be a valid file.'.format(string),
+            "{} must be a valid file.".format(string),
         )
 
     with open(string) as f:
@@ -124,10 +118,10 @@ def generate_test_content(mode, **kwargs):
     :type length: int
     :type timeout: float
     """
-    if not kwargs['length']:
-        del kwargs['length']
+    if not kwargs["length"]:
+        del kwargs["length"]
 
-    print('Generating content...', file=sys.stderr)
+    print("Generating content...", file=sys.stderr)
     if mode == TestCase.LONG_FILE:
         return generate_long_file(**kwargs)
     elif mode == TestCase.LONG_LINES:
@@ -141,53 +135,56 @@ def scan_content(content, timeout, baseline=None):
     :type baseline: dict|None
     """
     args = [
-        'python',
+        "python",
         os.path.join(
             get_root_directory(),
-            'scripts/benchmark.py',
+            "scripts/benchmark.py",
         ),
-        '--harakiri', str(timeout),
+        "--harakiri",
+        str(timeout),
     ]
 
-    with tempfile.NamedTemporaryFile('w') as f:
+    with tempfile.NamedTemporaryFile("w") as f:
         f.write(content)
 
-        print('Running checks...', file=sys.stderr)
+        print("Running checks...", file=sys.stderr)
         if not baseline:
             args.append(f.name)
             return subprocess.check_output(
                 args,
                 stderr=subprocess.DEVNULL,
-            ).decode('utf-8')
+            ).decode("utf-8")
 
-        with tempfile.NamedTemporaryFile('w') as b:
+        with tempfile.NamedTemporaryFile("w") as b:
             b.write(
-                json.dumps({
-                    'filenames': [f.name],
-                    'timings': baseline['timings'],
-                }),
+                json.dumps(
+                    {
+                        "filenames": [f.name],
+                        "timings": baseline["timings"],
+                    }
+                ),
             )
             b.seek(0)
 
-            args.append('--baseline')
+            args.append("--baseline")
             args.append(b.name)
 
             return subprocess.check_output(
                 args,
                 stderr=subprocess.DEVNULL,
-            ).decode('utf-8')
+            ).decode("utf-8")
 
 
 def generate_long_file(length=250000, **kwargs):
     return generate_content(
-        separator='\n',
+        separator="\n",
         length=length,
     )
 
 
 def generate_long_lines(length=250000, **kwargs):
     return generate_content(
-        separator=' ',
+        separator=" ",
         length=length,
     )
 
@@ -199,22 +196,22 @@ def generate_content(separator, length):
     :type length: int
     """
     valid_secrets = {
-        'AWSKeyDetector': 'AKIATESTTESTTESTTEST',
-        'ArtifactoryDetector': ':AKCtestTESTte',
-        'Base64HighEntropyString': 'Y29uZ3JhdHVsYXRpb25zISB0aGlzIGlzIGEgaGlkZGVuIG1lc3NhZ2U=',
-        'BasicAuthDetector': 'http://username:password@example.com',
-        'HexHighEntropyString': '123456abcd',
-        'KeywordDetector': 'api_key = foobar',
-        'MailchimpDetector': '376a2953ed38c31a43ea46e2b19257db-us2',
-        'PrivateKeyDetector': 'BEGIN PRIVATE KEY',
-        'SlackDetector': 'xoxb-1-test',
-        'StripeDetector': 'rk_live_TESTtestTESTtestTESTtest',
+        "AWSKeyDetector": "AKIATESTTESTTESTTEST",
+        "ArtifactoryDetector": ":AKCtestTESTte",
+        "Base64HighEntropyString": "Y29uZ3JhdHVsYXRpb25zISB0aGlzIGlzIGEgaGlkZGVuIG1lc3NhZ2U=",
+        "BasicAuthDetector": "http://username:password@example.com",
+        "HexHighEntropyString": "123456abcd",
+        "KeywordDetector": "api_key = foobar",
+        "MailchimpDetector": "376a2953ed38c31a43ea46e2b19257db-us2",
+        "PrivateKeyDetector": "BEGIN PRIVATE KEY",
+        "SlackDetector": "xoxb-1-test",
+        "StripeDetector": "rk_live_TESTtestTESTtestTESTtest",
     }
 
     with open(
         os.path.join(
             get_root_directory(),
-            'test_data/performance/best-songs.txt',
+            "test_data/performance/best-songs.txt",
         ),
     ) as f:
         source_material = f.read().splitlines()
@@ -235,5 +232,5 @@ def generate_content(separator, length):
     return separator.join(content)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

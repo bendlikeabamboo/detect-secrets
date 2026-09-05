@@ -3,15 +3,23 @@ minimal: setup
 
 .PHONY: setup
 setup:
-	tox -e venv
-
-.PHONY: install-hooks
-install-hooks:
-	tox -e pre-commit -- install -f --install-hooks
+	uv sync
+	uv run pre-commit install --install-hooks
 
 .PHONY: test
 test:
-	tox
+	uv run coverage erase
+	uv run coverage run -m pytest --strict-markers tests
+	uv run coverage report --show-missing --include=tests/* --fail-under 99
+	uv run coverage report --show-missing --include=testing/* --fail-under 100
+	uv run coverage report --show-missing --skip-covered --include=detect_secrets/* --fail-under 95
+	uv run ty check
+	uv run pre-commit run --all-files
+
+.PHONY: format
+format:
+	uv run ruff check --fix .
+	uv run ruff format .
 
 .PHONY: clean
 clean:
@@ -20,5 +28,5 @@ clean:
 
 .PHONY: super-clean
 super-clean: clean
-	rm -rf .tox
-	rm -rf venv
+	rm -rf .venv
+	rm -rf .ruff_cache

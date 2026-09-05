@@ -26,7 +26,7 @@ def clear_cache():
     # This is probably too aggressive, but it saves us from remembering to do this every
     # time we add a filter.
     for module_name in dir(filters):
-        if module_name.startswith('_'):
+        if module_name.startswith("_"):
             continue
 
         module = getattr(filters, module_name)
@@ -40,11 +40,11 @@ def clear_cache():
 @pytest.fixture(autouse=True)
 def mock_log():
     log = MockLogWrapper()
-    log.warning = warnings.warn     # keep warnings around for easier debugging
+    log.warning = warnings.warn  # keep warnings around for easier debugging
 
     with contextlib.ExitStack() as ctx_stack:
         for ctx in [
-            mock.patch(f'{module}.log', log, create=True)
+            mock.patch(f"{module}.log", log, create=True)
             for module in get_modules_from_package(detect_secrets)
         ]:
             ctx_stack.enter_context(ctx)
@@ -65,7 +65,7 @@ def prevent_color():
 
     with contextlib.ExitStack() as ctx_stack:
         for ctx in [
-            mock.patch(f'{module}.colorize', uncolor, create=True)
+            mock.patch(f"{module}.colorize", uncolor, create=True)
             for module in get_modules_from_package(detect_secrets)
         ]:
             ctx_stack.enter_context(ctx)
@@ -82,5 +82,5 @@ def mocked_requests():
 
 @pytest.fixture(autouse=True)
 def prevent_clear_screen():
-    with mock.patch('detect_secrets.audit.io.clear_screen'):
+    with mock.patch("detect_secrets.audit.io.clear_screen"):
         yield

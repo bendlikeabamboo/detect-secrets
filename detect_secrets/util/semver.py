@@ -3,12 +3,13 @@ NOTE(2020-11-07|domanchi): We probably can use `python-semver` to do this. Howev
 time of writing, it doesn't look like it's ready for production. Therefore, this implements
 a very basic version of it.
 """
+
 from typing import Any
 
 
 class Version:
     def __init__(self, version: str) -> None:
-        self.major, self.minor, self.patch = map(int, version.split('.'))
+        self.major, self.minor, self.patch = map(int, version.split("."))
 
     def __lt__(self, other: Any) -> bool:
         if not isinstance(other, Version):
@@ -36,11 +37,7 @@ class Version:
         if not isinstance(other, Version):
             raise NotImplementedError
 
-        return (
-            self.major == other.major
-            and self.minor == other.minor
-            and self.patch == other.patch
-        )
+        return self.major == other.major and self.minor == other.minor and self.patch == other.patch
 
     def __le__(self, other: Any) -> bool:
         return self.__lt__(other) or self.__eq__(other)

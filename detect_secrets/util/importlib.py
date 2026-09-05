@@ -34,7 +34,7 @@ def import_types_from_module(
 ) -> Iterable[Type]:
     output = []
     for name in dir(module):
-        if name.startswith('_'):
+        if name.startswith("_"):
             continue
 
         attribute = getattr(module, name)
@@ -100,8 +100,8 @@ def import_file_as_module(filename: str, name: Optional[str] = None) -> ModuleTy
         raise InvalidFile
 
     module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)                 # type: ignore
-    module.__path__ = os.path.abspath(filename)     # type: ignore
+    spec.loader.exec_module(module)  # type: ignore
+    module.__path__ = os.path.abspath(filename)  # type: ignore
 
     return module
 
@@ -110,7 +110,8 @@ def get_modules_from_package(root: ModuleType) -> Iterable[str]:
     return [
         module
         for _, module, is_package in pkgutil.walk_packages(
-            root.__path__, prefix=f'{root.__name__}.',
+            root.__path__,
+            prefix=f"{root.__name__}.",
         )
         if not is_package
     ]

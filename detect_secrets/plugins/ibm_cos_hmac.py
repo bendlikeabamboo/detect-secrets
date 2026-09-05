@@ -12,17 +12,18 @@ from .base import RegexBasedDetector
 
 class IbmCosHmacDetector(RegexBasedDetector):
     """Scans for IBM Cloud Object Storage HMAC credentials."""
+
     # requires 3 factors
     #
     #   access_key: access_key_id
     #   secret_key: secret_access_key
     #   host, defaults to 's3.us.cloud-object-storage.appdomain.cloud'
 
-    secret_type = 'IBM COS HMAC Credentials'
+    secret_type = "IBM COS HMAC Credentials"
 
-    token_prefix = r'(?:(?:ibm)?[-_]?cos[-_]?(?:hmac)?|)'
-    password_keyword = r'(?:secret[-_]?(?:access)?[-_]?key)'
-    password = r'([a-f0-9]{48}(?![a-f0-9]))'
+    token_prefix = r"(?:(?:ibm)?[-_]?cos[-_]?(?:hmac)?|)"
+    password_keyword = r"(?:secret[-_]?(?:access)?[-_]?key)"
+    password = r"([a-f0-9]{48}(?![a-f0-9]))"
     denylist = (
         RegexBasedDetector.build_assignment_regex(
             prefix_regex=token_prefix,
@@ -31,7 +32,7 @@ class IbmCosHmacDetector(RegexBasedDetector):
         ),
     )
 
-    def verify(       # type: ignore[override]  # noqa: F821
+    def verify(  # type: ignore[override]  # noqa: F821
         self,
         secret: str,
         context: CodeSnippet,
@@ -53,8 +54,8 @@ class IbmCosHmacDetector(RegexBasedDetector):
 
 
 def find_access_key_id(context: CodeSnippet) -> List[str]:
-    key_id_keyword_regex = r'(?:access[-_]?(?:key)?[-_]?(?:id)?|key[-_]?id)'
-    key_id_regex = r'([a-f0-9]{32})'
+    key_id_keyword_regex = r"(?:access[-_]?(?:key)?[-_]?(?:id)?|key[-_]?id)"
+    key_id_regex = r"([a-f0-9]{32})"
 
     regex = RegexBasedDetector.build_assignment_regex(
         prefix_regex=IbmCosHmacDetector.token_prefix,
@@ -62,29 +63,25 @@ def find_access_key_id(context: CodeSnippet) -> List[str]:
         secret_regex=key_id_regex,
     )
 
-    return [
-        match
-        for line in context
-        for match in regex.findall(line)
-    ]
+    return [match for line in context for match in regex.findall(line)]
 
 
 def hash(key: bytes, msg: str) -> bytes:
-    return hmac.new(key, msg.encode('utf-8'), hashlib.sha256).digest()
+    return hmac.new(key, msg.encode("utf-8"), hashlib.sha256).digest()
 
 
 def createSignatureKey(key: str, datestamp: str, region: str, service: str) -> bytes:
-    keyDate = hash(('AWS4' + key).encode('utf-8'), datestamp)
+    keyDate = hash(("AWS4" + key).encode("utf-8"), datestamp)
     keyString = hash(keyDate, region)
     keyService = hash(keyString, service)
-    keySigning = hash(keyService, 'aws4_request')
+    keySigning = hash(keyService, "aws4_request")
     return keySigning
 
 
 def verify_ibm_cos_hmac_credentials(
     access_key: str,
     secret_key: str,
-    host: str = 's3.us.cloud-object-storage.appdomain.cloud',
+    host: str = "s3.us.cloud-object-storage.appdomain.cloud",
 ) -> bool:
     response = query_ibm_cos_hmac(access_key, secret_key, host)
     return response.status_code == 200
@@ -93,69 +90,85 @@ def verify_ibm_cos_hmac_credentials(
 def query_ibm_cos_hmac(
     access_key: str,
     secret_key: str,
-    host: str = 's3.us.cloud-object-storage.appdomain.cloud',
+    host: str = "s3.us.cloud-object-storage.appdomain.cloud",
 ) -> requests.Response:
     # Sample code referenced from link below
     # https://cloud.ibm.com/docs/services/cloud-object-storage/api-reference?topic=cloud-object-storage-hmac-signature  # noqa: E501
 
     # request elements
-    http_method = 'GET'
+    http_method = "GET"
     # region is a wildcard value that takes the place of the AWS region value
     # as COS doesn't use the same conventions for regions, this parameter can accept any string
-    region = 'us-standard'
-    endpoint = 'https://{}'.format(host)
-    bucket = ''  # add a '/' before the bucket name to list buckets
-    object_key = ''
-    request_parameters = ''
+    region = "us-standard"
+    endpoint = "https://{}".format(host)
+    bucket = ""  # add a '/' before the bucket name to list buckets
+    object_key = ""
+    request_parameters = ""
 
     # assemble the standardized request
-    time = datetime.datetime.utcnow()
-    timestamp = time.strftime('%Y%m%dT%H%M%SZ')
-    datestamp = time.strftime('%Y%m%d')
+    time = datetime.datetime.now(datetime.timezone.utc)
+    timestamp = time.strftime("%Y%m%dT%H%M%SZ")
+    datestamp = time.strftime("%Y%m%d")
 
-    standardized_resource = '/' + bucket + '/' + object_key
+    standardized_resource = "/" + bucket + "/" + object_key
     standardized_querystring = request_parameters
-    standardized_headers = 'host:' + host + '\n' + 'x-amz-date:' + timestamp + '\n'
-    signed_headers = 'host;x-amz-date'
-    payload_hash = hashlib.sha256(''.encode('utf-8')).hexdigest()
+    standardized_headers = "host:" + host + "\n" + "x-amz-date:" + timestamp + "\n"
+    signed_headers = "host;x-amz-date"
+    payload_hash = hashlib.sha256("".encode("utf-8")).hexdigest()
 
     standardized_request = (
-        http_method + '\n'
-        + standardized_resource + '\n'
-        + standardized_querystring + '\n'
-        + standardized_headers + '\n'
-        + signed_headers + '\n'
+        http_method
+        + "\n"
+        + standardized_resource
+        + "\n"
+        + standardized_querystring
+        + "\n"
+        + standardized_headers
+        + "\n"
+        + signed_headers
+        + "\n"
         + payload_hash
-    ).encode('utf-8')
+    ).encode("utf-8")
 
     # assemble string-to-sign
-    hashing_algorithm = 'AWS4-HMAC-SHA256'
-    credential_scope = datestamp + '/' + region + '/' + 's3' + '/' + 'aws4_request'
+    hashing_algorithm = "AWS4-HMAC-SHA256"
+    credential_scope = datestamp + "/" + region + "/" + "s3" + "/" + "aws4_request"
     sts = (
-        hashing_algorithm + '\n'
-        + timestamp + '\n'
-        + credential_scope + '\n'
+        hashing_algorithm
+        + "\n"
+        + timestamp
+        + "\n"
+        + credential_scope
+        + "\n"
         + hashlib.sha256(standardized_request).hexdigest()
     )
 
     # generate the signature
-    signature_key = createSignatureKey(secret_key, datestamp, region, 's3')
+    signature_key = createSignatureKey(secret_key, datestamp, region, "s3")
     signature = hmac.new(
         signature_key,
-        (sts).encode('utf-8'),
+        (sts).encode("utf-8"),
         hashlib.sha256,
     ).hexdigest()
 
     # assemble all elements into the 'authorization' header
     v4auth_header = (
-        hashing_algorithm + ' '
-        + 'Credential=' + access_key + '/' + credential_scope + ', '
-        + 'SignedHeaders=' + signed_headers + ', '
-        + 'Signature=' + signature
+        hashing_algorithm
+        + " "
+        + "Credential="
+        + access_key
+        + "/"
+        + credential_scope
+        + ", "
+        + "SignedHeaders="
+        + signed_headers
+        + ", "
+        + "Signature="
+        + signature
     )
 
     # create and send the request
-    headers = {'x-amz-date': timestamp, 'Authorization': v4auth_header}
+    headers = {"x-amz-date": timestamp, "Authorization": v4auth_header}
     # the 'requests' package automatically adds the required 'host' header
     request_url = endpoint + standardized_resource + standardized_querystring
 

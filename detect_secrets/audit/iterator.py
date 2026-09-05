@@ -2,22 +2,18 @@ from collections.abc import Iterator
 from typing import Any
 from typing import Sequence
 
-from . import io
 from ..core.secrets_collection import SecretsCollection
+from . import io
 
 
-def get_secret_iterator(baseline: SecretsCollection) -> 'BidirectionalIterator':
+def get_secret_iterator(baseline: SecretsCollection) -> "BidirectionalIterator":
     """
     :returns: (index, filename, secret)
     """
-    unlabelled_secrets = [
-        secret
-        for _, secret in baseline
-        if secret.is_secret is None
-    ]
+    unlabelled_secrets = [secret for _, secret in baseline if secret.is_secret is None]
 
     if not unlabelled_secrets:
-        io.print_message('Nothing to audit!')
+        io.print_message("Nothing to audit!")
         return BidirectionalIterator([])
 
     return BidirectionalIterator(unlabelled_secrets)
@@ -55,5 +51,5 @@ class BidirectionalIterator(Iterator):
     def can_step_back(self) -> bool:
         return self.index > 0
 
-    def __iter__(self) -> 'BidirectionalIterator':  # pragma: no cover
+    def __iter__(self) -> "BidirectionalIterator":  # pragma: no cover
         return self

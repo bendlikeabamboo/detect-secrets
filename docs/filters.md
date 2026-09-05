@@ -23,10 +23,11 @@ files that don't exist.
 def is_potential_uuid(secret: str) -> bool:
     return bool(_get_uuid_regex().search(secret))
 
+
 @lru_cache(maxsize=1)
 def _get_uuid_regex() -> Pattern:
     return re.compile(
-        r'[a-f0-9]{8}\-[a-f0-9]{4}\-[a-f0-9]{4}\-[a-f0-9]{4}\-[a-f0-9]{12}',
+        r"[a-f0-9]{8}\-[a-f0-9]{4}\-[a-f0-9]{4}\-[a-f0-9]{4}\-[a-f0-9]{12}",
         re.IGNORECASE,
     )
 ```
@@ -111,16 +112,17 @@ customizing your own settings object. e.g.
 ```python
 from detect_secrets.core import baseline
 from detect_secrets.settings import transient_settings
+
 config = {
-    'filters_used': [
+    "filters_used": [
         {
-            'path': 'detect_secrets.filters.heuristic.is_potential_uuid',
+            "path": "detect_secrets.filters.heuristic.is_potential_uuid",
         },
     ],
 }
 
 with transient_settings(config):
-    secrets = baseline.create('.')
+    secrets = baseline.create(".")
 ```
 
 ### Using Your Own Filters

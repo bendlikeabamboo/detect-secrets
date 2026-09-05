@@ -55,9 +55,9 @@ function verifyArguments() {
     fi
 
     # Check if virtualenv is built.
-    test -f venv/bin/pip
+    test -f .venv/bin/python
     if [[ $? != 0 ]]; then
-        echo 'error: Run `make development` first.'
+        echo 'error: Run `make setup` first.'
         return 1
     fi
 
@@ -76,12 +76,12 @@ function getLatestTagName() {
 }
 
 function installDependency() {
-    # NOTE: We don't specify this in requirements-dev-minimal, since not all developers need
-    # to bump the version.
-    venv/bin/pip install bump2version
-    # Install local version of detect-secrets since when performing a commit, the pre-commit
-    # hook detect-secrets version (old) will be out of sync with the .secrets.baseline version (new)
-    venv/bin/pip install -e .
+    # Ensure the project environment is up to date (installs detect-secrets editable),
+    # since when performing a commit, the pre-commit hook detect-secrets version (old)
+    # will be out of sync with the .secrets.baseline version (new).
+    uv sync
+    # NOTE: We don't include bump2version in the dev dependency group, since not all
+    # developers need to bump the version.
 }
 
 function setVersion() {
@@ -99,9 +99,9 @@ function bumpVersion() {
     local part="$1"
     shift
     if [[ $DRY_RUN == 0 ]]; then
-        venv/bin/bump2version "$part" "$@"
+        uv run --with bump2version bump2version "$part" "$@"
     else
-        venv/bin/bump2version "$part" --dry-run --verbose "$@"
+        uv run --with bump2version bump2version "$part" --dry-run --verbose "$@"
     fi
 
     return $?

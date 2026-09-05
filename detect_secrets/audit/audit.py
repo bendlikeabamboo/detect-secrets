@@ -2,12 +2,13 @@
 The audit module allows analysts to easily scan the baseline, and verify whether
 the secrets flagged are actually secrets.
 """
-from . import io
+
 from ..core import baseline
 from ..exceptions import NoLineNumberError
 from ..exceptions import SecretNotFoundOnSpecifiedLineError
 from ..types import SecretContext
 from ..util.code_snippet import get_code_snippet
+from . import io
 from .common import get_baseline_from_file
 from .common import get_raw_secret_from_file
 from .common import open_file
@@ -23,7 +24,7 @@ def audit_baseline(filename: str) -> None:
 
     secrets.trim()
     if _classify_secrets(get_secret_iterator(secrets)):
-        io.print_message('Saving progress...')
+        io.print_message("Saving progress...")
         baseline.save_to_file(secrets, filename)
 
 
@@ -72,7 +73,7 @@ def _classify_secrets(iterator: BidirectionalIterator) -> bool:
             break
 
         if decision == io.InputOptions.QUIT:
-            io.print_message('Quitting...')
+            io.print_message("Quitting...")
             break
 
         if decision == io.InputOptions.BACK:

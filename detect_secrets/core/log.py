@@ -1,11 +1,11 @@
 import logging
 import sys
 from functools import partial
-from typing import cast
 from typing import Optional
+from typing import cast
 
 
-def get_logger(name: Optional[str] = None, format_string: Optional[str] = None) -> 'CustomLogger':
+def get_logger(name: Optional[str] = None, format_string: Optional[str] = None) -> "CustomLogger":
     """
     :param name: used for declaring log channels.
     :param format_string: for custom formatting
@@ -15,7 +15,7 @@ def get_logger(name: Optional[str] = None, format_string: Optional[str] = None) 
 
     # Bind custom method to instance.
     # Source: https://stackoverflow.com/a/2982
-    log.set_debug_level = partial(CustomLogger.set_debug_level, log)    # type: ignore
+    log.set_debug_level = partial(CustomLogger.set_debug_level, log)  # type: ignore
     cast(CustomLogger, log).set_debug_level(0)
 
     # Setting up log formats
@@ -23,9 +23,7 @@ def get_logger(name: Optional[str] = None, format_string: Optional[str] = None) 
     handler = logging.StreamHandler(sys.stderr)
     handler.setFormatter(
         logging.Formatter(
-            format_string
-            or
-            '[%(module)s]\t%(levelname)s\t%(message)s',
+            format_string or "[%(module)s]\t%(levelname)s\t%(message)s",
         ),
     )
     log.addHandler(handler)
@@ -64,4 +62,4 @@ class CustomLogger(logging.Logger):
         )
 
 
-log = get_logger('detect-secrets')
+log = get_logger("detect-secrets")

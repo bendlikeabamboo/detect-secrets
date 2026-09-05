@@ -19,12 +19,20 @@ jobs:
         os: [ubuntu-latest, macos-latest, windows-latest]
         python: ['3.9', '3.10', '3.11', '3.12', '3.13']
     steps:
-    - uses: actions/checkout@v4
-    - uses: actions/setup-python@v5
+    - uses: actions/checkout@v7
+    - uses: actions/setup-python@v7
       with:
         python-version: ${{ matrix.python }}
-    - run: python -m pip install --upgrade setuptools pip tox virtualenv
-    # Run tox only for the installed py version on the runner as outlined in the python matrix
-    # Ensures the correct py version is installed and tested as opposed to 'tox' which attempts to run for all py versions in tox.ini
-    - run: tox -e py
-    - run: tox -e mypy
+    - uses: astral-sh/setup-uv@v7
+      with:
+        enable-cache: true
+    - run: uv sync --frozen --python ${{ matrix.python }}
+    - run: uv run coverage erase
+    - run: uv run coverage run -m pytest --strict-markers tests
+    # I don't want to write `pragma: no cover` for `for` loops that don't have
+    # a case that doesn't enter the `for` loop. -_-"
+    - run: uv run coverage report --show-missing --include=tests/* --fail-under 99
+    - run: uv run coverage report --show-missing --include=testing/* --fail-under 100
+    - run: uv run coverage report --show-missing --skip-covered --include=detect_secrets/* --fail-under 95
+    - run: uv run ty check
+    - run: uv run pre-commit run --all-files

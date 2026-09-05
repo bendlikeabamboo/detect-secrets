@@ -11,20 +11,20 @@ from .base import RegexBasedDetector
 class CloudantDetector(RegexBasedDetector):
     """Scans for Cloudant credentials."""
 
-    secret_type = 'Cloudant Credentials'
+    secret_type = "Cloudant Credentials"
 
     # opt means optional
-    dot = r'\.'
-    cl_account = r'[\w\-]+'
-    cl = r'(?:cloudant|cl|clou)'
-    opt_api = r'(?:api|)'
-    cl_key_or_pass = opt_api + r'(?:key|pwd|pw|password|pass|token)'
-    cl_pw = r'([0-9a-f]{64})'
-    cl_api_key = r'([a-z]{24})'
-    colon = r'\:'
-    at = r'\@'
-    http = r'(?:https?\:\/\/)'
-    cloudant_api_url = r'cloudant\.com'
+    dot = r"\."
+    cl_account = r"[\w\-]+"
+    cl = r"(?:cloudant|cl|clou)"
+    opt_api = r"(?:api|)"
+    cl_key_or_pass = opt_api + r"(?:key|pwd|pw|password|pass|token)"
+    cl_pw = r"([0-9a-f]{64})"
+    cl_api_key = r"([a-z]{24})"
+    colon = r"\:"
+    at = r"\@"
+    http = r"(?:https?\:\/\/)"
+    cloudant_api_url = r"cloudant\.com"
     denylist = [
         RegexBasedDetector.build_assignment_regex(
             prefix_regex=cl,
@@ -37,7 +37,7 @@ class CloudantDetector(RegexBasedDetector):
             secret_regex=cl_api_key,
         ),
         re.compile(
-            r'{http}{cl_account}{colon}{cl_pw}{at}{cl_account}{dot}{cloudant_api_url}'.format(
+            r"{http}{cl_account}{colon}{cl_pw}{at}{cl_account}{dot}{cloudant_api_url}".format(
                 http=http,
                 colon=colon,
                 cl_account=cl_account,
@@ -49,7 +49,7 @@ class CloudantDetector(RegexBasedDetector):
             flags=re.IGNORECASE,
         ),
         re.compile(
-            r'{http}{cl_account}{colon}{cl_api_key}{at}{cl_account}{dot}{cloudant_api_url}'.format(
+            r"{http}{cl_account}{colon}{cl_api_key}{at}{cl_account}{dot}{cloudant_api_url}".format(
                 http=http,
                 colon=colon,
                 cl_account=cl_account,
@@ -62,7 +62,7 @@ class CloudantDetector(RegexBasedDetector):
         ),
     ]
 
-    def verify(       # type: ignore[override]  # noqa: F821
+    def verify(  # type: ignore[override]  # noqa: F821
         self,
         secret: str,
         context: CodeSnippet,
@@ -78,10 +78,12 @@ class CloudantDetector(RegexBasedDetector):
 
 
 def find_account(context: CodeSnippet) -> List[str]:
-    opt_hostname_keyword = r'(?:hostname|host|username|id|user|userid|user-id|user-name|' \
-        'name|user_id|user_name|uname|account)'
-    account = r'(\w[\w\-]*)'
-    opt_basic_auth = r'(?:[\w\-:%]*\@)?'
+    opt_hostname_keyword = (
+        r"(?:hostname|host|username|id|user|userid|user-id|user-name|"
+        "name|user_id|user_name|uname|account)"
+    )
+    account = r"(\w[\w\-]*)"
+    opt_basic_auth = r"(?:[\w\-:%]*\@)?"
 
     regexes = (
         RegexBasedDetector.build_assignment_regex(
@@ -90,7 +92,7 @@ def find_account(context: CodeSnippet) -> List[str]:
             secret_regex=account,
         ),
         re.compile(
-            r'{http}{opt_basic_auth}{cl_account}{dot}{cloudant_api_url}'.format(
+            r"{http}{opt_basic_auth}{cl_account}{dot}{cloudant_api_url}".format(
                 http=CloudantDetector.http,
                 opt_basic_auth=opt_basic_auth,
                 cl_account=account,
@@ -101,23 +103,15 @@ def find_account(context: CodeSnippet) -> List[str]:
         ),
     )
 
-    return [
-        match
-        for line in context
-        for regex in regexes
-        for match in regex.findall(line)
-    ]
+    return [match for line in context for regex in regexes for match in regex.findall(line)]
 
 
 def verify_cloudant_key(hostname: str, token: str) -> VerifiedResult:
-    headers = {'Content-type': 'application/json'}
-    request_url = 'https://{hostname}:' \
-        '{token}' \
-        '@{hostname}.' \
-        'cloudant.com'.format(
-            hostname=hostname,
-            token=token,
-        )
+    headers = {"Content-type": "application/json"}
+    request_url = "https://{hostname}:{token}@{hostname}.cloudant.com".format(
+        hostname=hostname,
+        token=token,
+    )
 
     try:
         response = requests.get(

@@ -19,11 +19,11 @@ def get_caller_path(offset: int = 0) -> str:
     :raises: IndexError
     """
     stack = inspect.stack()
-    frame_info = stack[1 + offset]      # +1 because we don't want the current frame.
+    frame_info = stack[1 + offset]  # +1 because we don't want the current frame.
 
-    module_path = frame_info.frame.f_globals['__name__']
+    module_path = frame_info.frame.f_globals["__name__"]
     function_name = frame_info.function
-    return f'{module_path}.{function_name}'
+    return f"{module_path}.{function_name}"
 
 
 def compute_file_hash(filename: str, buffer_size: int = 64 * 1024) -> str:
@@ -41,7 +41,7 @@ def compute_file_hash(filename: str, buffer_size: int = 64 * 1024) -> str:
         $ sha1sum <filename>
     """
     sha1 = hashlib.sha1()
-    with open(filename, 'rb') as f:
+    with open(filename, "rb") as f:
         data = f.read(buffer_size)
         while data:
             sha1.update(data)

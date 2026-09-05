@@ -22,40 +22,40 @@ def test_baseline_optional(parser):
 
 def test_no_such_file(parser):
     with pytest.raises(SystemExit):
-        parser.parse_args(['--baseline', 'random-file-name'])
+        parser.parse_args(["--baseline", "random-file-name"])
 
 
 def test_non_valid_json(parser):
-    with _mock_file('not JSON') as filename, pytest.raises(SystemExit):
-        parser.parse_args(['--baseline', filename])
+    with _mock_file("not JSON") as filename, pytest.raises(SystemExit):
+        parser.parse_args(["--baseline", filename])
 
 
 def test_invalid_baseline(parser):
-    with _mock_file(json.dumps({'a': 2})) as filename, pytest.raises(SystemExit):
-        parser.parse_args(['--baseline', filename])
+    with _mock_file(json.dumps({"a": 2})) as filename, pytest.raises(SystemExit):
+        parser.parse_args(["--baseline", filename])
 
 
 def test_success(parser):
     baseline = {
-        'version': '0.0.1',
-        'plugins_used': [
+        "version": "0.0.1",
+        "plugins_used": [
             {
-                'name': 'AWSKeyDetector',
+                "name": "AWSKeyDetector",
             },
             {
-                'base64_limit': 3,
-                'name': 'Base64HighEntropyString',
+                "base64_limit": 3,
+                "name": "Base64HighEntropyString",
             },
         ],
-        'results': [],
+        "results": [],
     }
 
     with _mock_file(json.dumps(baseline)) as filename:
-        parser.parse_args(['--baseline', filename])
+        parser.parse_args(["--baseline", filename])
 
     assert len(get_settings().plugins) == 2
-    assert 'AWSKeyDetector' in get_settings().plugins
-    assert get_settings().plugins['Base64HighEntropyString'] == {'limit': 3}
+    assert "AWSKeyDetector" in get_settings().plugins
+    assert get_settings().plugins["Base64HighEntropyString"] == {"limit": 3}
 
 
 @contextmanager

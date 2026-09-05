@@ -20,7 +20,7 @@ def test_ensure_all_plugins_have_unique_secret_types():
 
 
 class MockPlugin(BasePlugin):
-    secret_type = 'MockPlugin'
+    secret_type = "MockPlugin"
 
     def __init__(self, verify_result: VerifiedResult):
         self.verify_result = verify_result
@@ -35,7 +35,7 @@ class MockPlugin(BasePlugin):
 
 
 class MockExceptionRaisingPlugin(BasePlugin):
-    secret_type = 'MockExceptionRaisingPlugin'
+    secret_type = "MockExceptionRaisingPlugin"
 
     def analyze_string(self, string: str) -> Generator[str, None, None]:
         yield string
@@ -44,14 +44,14 @@ class MockExceptionRaisingPlugin(BasePlugin):
         raise requests.exceptions.Timeout
 
 
-class TestAnalyzeLine():
-    def setup(self):
-        self.line = 'some-secret'
-        self.filename = 'secrets.py'
+class TestAnalyzeLine:
+    def setup_method(self):
+        self.line = "some-secret"
+        self.filename = "secrets.py"
         self.context = get_code_snippet(lines=[self.line], line_number=1)
 
     @pytest.mark.parametrize(
-        'verified_result ,is_verified',
+        "verified_result ,is_verified",
         [
             (VerifiedResult.UNVERIFIED, False),
             (VerifiedResult.VERIFIED_FALSE, False),
@@ -101,12 +101,12 @@ class TestAnalyzeLine():
 
     def _enable_filter(self):
         get_settings().filters[
-            'detect_secrets.filters.common.is_ignored_due_to_verification_policies'
+            "detect_secrets.filters.common.is_ignored_due_to_verification_policies"
         ] = {
-            'min_value': 0,
+            "min_value": 0,
         }
 
     def _disable_filter(self):
         get_settings().disable_filters(
-            'detect_secrets.filters.common.is_ignored_due_to_verification_policies',
+            "detect_secrets.filters.common.is_ignored_due_to_verification_policies",
         )

@@ -28,19 +28,19 @@ def _get_file_to_index_dict() -> Dict[str, int]:
     # as more language specific file parsers are implemented.
     # Discussion: https://github.com/Yelp/detect-secrets/pull/105
     return {
-        'yaml': 0,
+        "yaml": 0,
     }
 
 
 @lru_cache(maxsize=1)
 def _get_comment_tuples() -> List[Tuple[str, str]]:
     return [
-        ('#', ''),                    # e.g. python or yaml
-        ('//', ''),                   # e.g. golang
-        (r'/\*', r' *\*/'),           # e.g. c
-        ('\'', ''),                   # e.g. visual basic .net
-        ('--', ''),                   # e.g. sql
-        (r'<!--[# \t]*?', ' *?-->'),  # e.g. xml
+        ("#", ""),  # e.g. python or yaml
+        ("//", ""),  # e.g. golang
+        (r"/\*", r" *\*/"),  # e.g. c
+        ("'", ""),  # e.g. visual basic .net
+        ("--", ""),  # e.g. sql
+        (r"<!--[# \t]*?", " *?-->"),  # e.g. xml
         # many other inline comment syntaxes are not included,
         # because we want to be performant for
         # any(regex.search(line) for regex in ALLOWLIST_REGEXES)
@@ -57,14 +57,8 @@ def _get_allowlist_regexes_for_file(filename: str) -> Iterable[List[Pattern]]:
     if ext[1:] in _get_file_to_index_dict():
         comment_tuples = [comment_tuples[_get_file_to_index_dict()[ext[1:]]]]
 
-    yield [
-        get_allowlist_regexes(comment_tuple=t, nextline=False)
-        for t in comment_tuples
-    ]
-    yield [
-        get_allowlist_regexes(comment_tuple=t, nextline=True)
-        for t in comment_tuples
-    ]
+    yield [get_allowlist_regexes(comment_tuple=t, nextline=False) for t in comment_tuples]
+    yield [get_allowlist_regexes(comment_tuple=t, nextline=True) for t in comment_tuples]
 
 
 # Note: Cache size should be 2x the number of comment types
@@ -73,16 +67,16 @@ def get_allowlist_regexes(comment_tuple: Tuple[str, str], nextline: bool) -> Pat
     start = comment_tuple[0]
     end = comment_tuple[1]
     return re.compile(
-        r'{}[ \t]*{} *pragma: ?{}{}[ -]secret.*?{}[ \t]*$'.format(
+        r"{}[ \t]*{} *pragma: ?{}{}[ -]secret.*?{}[ \t]*$".format(
             # Note: No text can precede a nextline pragma, this prevents obscuring what is allowed
             # For instance, we want to prevent the following case from working:
             #     foo = 'bar' # pragma: allowlist nextline secret
             #     pass = 'hunter2'
-            r'^' if nextline else '',
+            r"^" if nextline else "",
             start,
             # Note: Always use allowlist, whitelist will be deprecated in the future
-            r'allowlist' if nextline else r'(allow|white)list',
-            r'[ -]nextline' if nextline else '',
+            r"allowlist" if nextline else r"(allow|white)list",
+            r"[ -]nextline" if nextline else "",
             end,
         ),
     )

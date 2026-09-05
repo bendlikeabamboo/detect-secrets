@@ -10,7 +10,7 @@ from testing.mocks import mock_file_object
 
 
 @pytest.mark.parametrize(
-    'transformer',
+    "transformer",
     (
         ConfigFileTransformer,
         EagerConfigFileTransformer,
@@ -31,19 +31,19 @@ def test_transformer(transformer):
     )
 
     assert transformer().parse_file(file) == [
-        '',
+        "",
         'keyA = "value"',
-        '',
+        "",
         'keyB = "double"',
         'keyC = "single"',
-        '',
+        "",
         'keyD = "o\'brian"',
-        'keyE = "\\\"chai\\\" tea"',
+        'keyE = "\\"chai\\" tea"',
     ]
 
 
 @pytest.mark.parametrize(
-    'transformer',
+    "transformer",
     (
         ConfigFileTransformer,
         EagerConfigFileTransformer,
@@ -66,16 +66,16 @@ def test_transformer_persist_pragma_comments(transformer):
     )
 
     assert transformer().parse_file(file) == [
-        '',
+        "",
         'keyA = "value"',
-        '',
-        '# pragma: allowlist nextline secret',
+        "",
+        "# pragma: allowlist nextline secret",
         'keyB = "double"',
         'keyC = "single"',
-        '',
-        '# pragma: allowlist nextline secret',
+        "",
+        "# pragma: allowlist nextline secret",
         'keyD = "o\'brian"',
-        'keyE = "\\\"chai\\\" tea"',
+        'keyE = "\\"chai\\" tea"',
     ]
 
 
@@ -96,10 +96,10 @@ def test_basic():
     )
 
     assert list(IniFileParser(file)) == [
-        ('key', 'value', 2),
-        ('rice', 'fried', 3),
-        ('tea', 'chai', 6),
-        ('water', 'unflavored', 10),
+        ("key", "value", 2),
+        ("rice", "fried", 3),
+        ("tea", "chai", 6),
+        ("water", "unflavored", 10),
     ]
 
 
@@ -122,13 +122,13 @@ def test_basic_persist_pragma_comments_pound():
     )
 
     assert list(IniFileParser(file)) == [
-        ('key', '# pragma: allowlist nextline secret', 2),
-        ('key', 'value', 3),
-        ('key', '# pragma: allowlist nextline secret', 4),
-        ('rice', 'fried', 5),
-        ('tea', 'chai', 8),
-        ('water', '# pragma: allowlist nextline secret', 11),
-        ('water', 'unflavored', 12),
+        ("key", "# pragma: allowlist nextline secret", 2),
+        ("key", "value", 3),
+        ("key", "# pragma: allowlist nextline secret", 4),
+        ("rice", "fried", 5),
+        ("tea", "chai", 8),
+        ("water", "# pragma: allowlist nextline secret", 11),
+        ("water", "unflavored", 12),
     ]
 
 
@@ -151,18 +151,18 @@ def test_basic_persist_pragma_comments_semi_colon():
     )
 
     assert list(IniFileParser(file)) == [
-        ('key', '; pragma: allowlist nextline secret', 2),
-        ('key', 'value', 3),
-        ('key', '; pragma: allowlist nextline secret', 4),
-        ('rice', 'fried', 5),
-        ('tea', 'chai', 8),
-        ('water', '; pragma: allowlist nextline secret', 11),
-        ('water', 'unflavored', 12),
+        ("key", "; pragma: allowlist nextline secret", 2),
+        ("key", "value", 3),
+        ("key", "; pragma: allowlist nextline secret", 4),
+        ("rice", "fried", 5),
+        ("tea", "chai", 8),
+        ("water", "; pragma: allowlist nextline secret", 11),
+        ("water", "unflavored", 12),
     ]
 
 
 @pytest.mark.parametrize(
-    'content',
+    "content",
     (
         textwrap.dedent("""
             key = value
@@ -170,7 +170,6 @@ def test_basic_persist_pragma_comments_semi_colon():
             # comment
             tea = chai
         """)[1:-1],
-
         # This case needs `add_header=True` to work.
         textwrap.dedent("""
             key = value
@@ -198,8 +197,8 @@ def test_add_header():
     )
 
     assert list(IniFileParser(file, add_header=True)) == [
-        ('key', 'value', 1),
-        ('tea', 'chai', 4),
+        ("key", "value", 1),
+        ("tea", "chai", 4),
     ]
 
 
@@ -218,9 +217,9 @@ class TestMultipleValues:
         )
 
         assert list(IniFileParser(file)) == [
-            ('key', 'value0', 2),
-            ('key', 'value1', 3),
-            ('key', 'value2', 6),
+            ("key", "value0", 2),
+            ("key", "value1", 3),
+            ("key", "value2", 6),
         ]
 
     @staticmethod
@@ -237,8 +236,8 @@ class TestMultipleValues:
         )
 
         assert list(IniFileParser(file)) == [
-            ('key', 'value1', 3),
-            ('key', 'value2', 6),
+            ("key", "value1", 3),
+            ("key", "value2", 6),
         ]
 
     @staticmethod
@@ -257,9 +256,9 @@ class TestMultipleValues:
         )
 
         assert list(IniFileParser(file)) == [
-            ('key', '# pragma: allowlist nextline secret', 2),
-            ('key', 'value0', 3),
-            ('key', '# pragma: allowlist nextline secret', 4),
-            ('key', 'value1', 5),
-            ('key', 'value2', 8),
+            ("key", "# pragma: allowlist nextline secret", 2),
+            ("key", "value0", 3),
+            ("key", "# pragma: allowlist nextline secret", 4),
+            ("key", "value1", 5),
+            ("key", "value2", 8),
         ]

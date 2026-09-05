@@ -19,16 +19,16 @@ from .settings import get_settings
 
 
 def main(argv: Optional[List[str]] = None) -> int:
-    if not argv and len(sys.argv) == 1:     # pragma: no cover
-        argv = ['--help']
+    if not argv and len(sys.argv) == 1:  # pragma: no cover
+        argv = ["--help"]
 
     args = parse_args(argv)
-    if args.verbose:    # pragma: no cover
+    if args.verbose:  # pragma: no cover
         log.set_debug_level(args.verbose)
 
-    if args.action == 'scan':
+    if args.action == "scan":
         handle_scan_action(args)
-    elif args.action == 'audit':
+    elif args.action == "audit":
         handle_audit_action(args)
 
     return 0
@@ -42,7 +42,7 @@ def handle_scan_action(args: argparse.Namespace) -> None:
     if args.list_all_plugins:
         # NOTE: If there was a baseline provided, it would already have been parsed and
         # settings populated by the time it reaches here.
-        print('\n'.join(get_settings().plugins))
+        print("\n".join(get_settings().plugins))
         return
 
     if args.string:
@@ -92,29 +92,26 @@ def handle_scan_action(args: argparse.Namespace) -> None:
 def scan_adhoc_string(line: str) -> str:
     registered_plugins = get_plugins()
 
-    results = {
-        plugin.secret_type: 'False'
-        for plugin in registered_plugins
-    }
+    results = {plugin.secret_type: "False" for plugin in registered_plugins}
 
     for secret in scan_line(line):
-        results[secret.type] = (
-            plugins.initialize.from_secret_type(secret.type)    # type: ignore
-            .format_scan_result(secret)
+        results[secret.type] = plugins.initialize.from_secret_type(secret.type).format_scan_result(
+            secret
         )
 
     # Pretty formatting
-    longest_plugin_name_length = max([
-        len(plugin.__class__.__name__)
-        for plugin in registered_plugins
-    ])
-    return '\n'.join([
-        ('{:%d}: {}' % longest_plugin_name_length).format(
-            plugin.__class__.__name__,
-            results[plugin.secret_type],
-        )
-        for plugin in sorted(registered_plugins, key=lambda x: str(x.__class__.__name__))
-    ])
+    longest_plugin_name_length = max(
+        [len(plugin.__class__.__name__) for plugin in registered_plugins]
+    )
+    return "\n".join(
+        [
+            ("{:%d}: {}" % longest_plugin_name_length).format(
+                plugin.__class__.__name__,
+                results[plugin.secret_type],
+            )
+            for plugin in sorted(registered_plugins, key=lambda x: str(x.__class__.__name__))
+        ]
+    )
 
 
 def handle_audit_action(args: argparse.Namespace) -> None:

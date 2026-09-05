@@ -5,8 +5,8 @@ from contextlib import contextmanager
 
 import pytest
 
-from detect_secrets.audit.report import generate_report
 from detect_secrets.audit.report import SecretClassToPrint
+from detect_secrets.audit.report import generate_report
 from detect_secrets.constants import VerifiedResult
 from detect_secrets.core import baseline
 from detect_secrets.core.secrets_collection import SecretsCollection
@@ -16,70 +16,71 @@ from detect_secrets.plugins.jwt import JwtTokenDetector
 from detect_secrets.settings import transient_settings
 from testing.mocks import mock_named_temporary_file
 
-
-url_format = 'http://username:{}@www.example.com/auth'
-first_secret = 'value1'
-second_secret = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ'  # noqa: E501
-random_secret = ''.join(random.choice(string.ascii_letters) for _ in range(8))
-aws_secret = 'AKIAZZZZZZZZZZZZZZZZ'
+url_format = "http://username:{}@www.example.com/auth"
+first_secret = "value1"
+second_secret = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ"  # noqa: E501
+random_secret = "".join(random.choice(string.ascii_letters) for _ in range(8))
+aws_secret = "AKIAZZZZZZZZZZZZZZZZ"
 
 
 @pytest.mark.parametrize(
-    'class_to_print, expected_real, expected_false, expected_output',
+    "class_to_print, expected_real, expected_false, expected_output",
     [
         (
-            None, 4, 1,
+            None,
+            4,
+            1,
             {
-                'results': [
+                "results": [
                     {
-                        'category': 'VERIFIED_TRUE',
-                        'lines': {
-                            1: 'url = {}'.format(url_format.format(first_secret)),
-                            3: 'link = {}'.format(url_format.format(first_secret)),
+                        "category": "VERIFIED_TRUE",
+                        "lines": {
+                            1: "url = {}".format(url_format.format(first_secret)),
+                            3: "link = {}".format(url_format.format(first_secret)),
                         },
-                        'secrets': first_secret,
-                        'types': [
+                        "secrets": first_secret,
+                        "types": [
                             BasicAuthDetector.secret_type,
                         ],
                     },
                     {
-                        'category': 'UNVERIFIED',
-                        'lines': {
-                            2: 'example = {}'.format(url_format.format(random_secret)),
+                        "category": "UNVERIFIED",
+                        "lines": {
+                            2: "example = {}".format(url_format.format(random_secret)),
                         },
-                        'secrets': random_secret,
-                        'types': [
+                        "secrets": random_secret,
+                        "types": [
                             BasicAuthDetector.secret_type,
                         ],
                     },
                     {
-                        'category': 'VERIFIED_TRUE',
-                        'lines': {
-                            1: 'url = {}'.format(url_format.format(second_secret)),
+                        "category": "VERIFIED_TRUE",
+                        "lines": {
+                            1: "url = {}".format(url_format.format(second_secret)),
                         },
-                        'secrets': second_secret,
-                        'types': [
+                        "secrets": second_secret,
+                        "types": [
                             BasicAuthDetector.secret_type,
                             JwtTokenDetector.secret_type,
                         ],
                     },
                     {
-                        'category': 'VERIFIED_FALSE',
-                        'lines': {
-                            2: 'example = {}'.format(url_format.format(random_secret)),
+                        "category": "VERIFIED_FALSE",
+                        "lines": {
+                            2: "example = {}".format(url_format.format(random_secret)),
                         },
-                        'secrets': random_secret,
-                        'types': [
+                        "secrets": random_secret,
+                        "types": [
                             BasicAuthDetector.secret_type,
                         ],
                     },
                     {
-                        'category': 'VERIFIED_TRUE',
-                        'lines': {
-                            1: 'aws_access_key = {}'.format(aws_secret),
+                        "category": "VERIFIED_TRUE",
+                        "lines": {
+                            1: "aws_access_key = {}".format(aws_secret),
                         },
-                        'secrets': aws_secret,
-                        'types': [
+                        "secrets": aws_secret,
+                        "types": [
                             AWSKeyDetector.secret_type,
                         ],
                     },
@@ -87,47 +88,49 @@ aws_secret = 'AKIAZZZZZZZZZZZZZZZZ'
             },
         ),
         (
-            SecretClassToPrint.REAL_SECRET, 4, 0,
+            SecretClassToPrint.REAL_SECRET,
+            4,
+            0,
             {
-                'results': [
+                "results": [
                     {
-                        'category': 'VERIFIED_TRUE',
-                        'lines': {
-                            1: 'url = {}'.format(url_format.format(first_secret)),
-                            3: 'link = {}'.format(url_format.format(first_secret)),
+                        "category": "VERIFIED_TRUE",
+                        "lines": {
+                            1: "url = {}".format(url_format.format(first_secret)),
+                            3: "link = {}".format(url_format.format(first_secret)),
                         },
-                        'secrets': first_secret,
-                        'types': [
+                        "secrets": first_secret,
+                        "types": [
                             BasicAuthDetector.secret_type,
                         ],
                     },
                     {
-                        'category': 'UNVERIFIED',
-                        'lines': {
-                            2: 'example = {}'.format(url_format.format(random_secret)),
+                        "category": "UNVERIFIED",
+                        "lines": {
+                            2: "example = {}".format(url_format.format(random_secret)),
                         },
-                        'secrets': random_secret,
-                        'types': [
+                        "secrets": random_secret,
+                        "types": [
                             BasicAuthDetector.secret_type,
                         ],
                     },
                     {
-                        'category': 'VERIFIED_TRUE',
-                        'lines': {
-                            1: 'url = {}'.format(url_format.format(second_secret)),
+                        "category": "VERIFIED_TRUE",
+                        "lines": {
+                            1: "url = {}".format(url_format.format(second_secret)),
                         },
-                        'secrets': second_secret,
-                        'types': [
+                        "secrets": second_secret,
+                        "types": [
                             JwtTokenDetector.secret_type,
                         ],
                     },
                     {
-                        'category': 'VERIFIED_TRUE',
-                        'lines': {
-                            1: 'aws_access_key = {}'.format(aws_secret),
+                        "category": "VERIFIED_TRUE",
+                        "lines": {
+                            1: "aws_access_key = {}".format(aws_secret),
                         },
-                        'secrets': aws_secret,
-                        'types': [
+                        "secrets": aws_secret,
+                        "types": [
                             AWSKeyDetector.secret_type,
                         ],
                     },
@@ -135,26 +138,28 @@ aws_secret = 'AKIAZZZZZZZZZZZZZZZZ'
             },
         ),
         (
-            SecretClassToPrint.FALSE_POSITIVE, 0, 2,
+            SecretClassToPrint.FALSE_POSITIVE,
+            0,
+            2,
             {
-                'results': [
+                "results": [
                     {
-                        'category': 'VERIFIED_FALSE',
-                        'lines': {
-                            1: 'url = {}'.format(url_format.format(second_secret)),
+                        "category": "VERIFIED_FALSE",
+                        "lines": {
+                            1: "url = {}".format(url_format.format(second_secret)),
                         },
-                        'secrets': second_secret,
-                        'types': [
+                        "secrets": second_secret,
+                        "types": [
                             BasicAuthDetector.secret_type,
                         ],
                     },
                     {
-                        'category': 'VERIFIED_FALSE',
-                        'lines': {
-                            2: 'example = {}'.format(url_format.format(random_secret)),
+                        "category": "VERIFIED_FALSE",
+                        "lines": {
+                            2: "example = {}".format(url_format.format(random_secret)),
                         },
-                        'secrets': random_secret,
-                        'types': [
+                        "secrets": random_secret,
+                        "types": [
                             BasicAuthDetector.secret_type,
                         ],
                     },
@@ -174,10 +179,10 @@ def test_generate_report(
     real, false = count_results(output)
     assert real == expected_real
     assert false == expected_false
-    for expected in expected_output['results']:
+    for expected in expected_output["results"]:
         found = False
-        for item in output['results']:
-            if expected['secrets'] == item['secrets'] and expected['category'] == item['category']:
+        for item in output["results"]:
+            if expected["secrets"] == item["secrets"] and expected["category"] == item["category"]:
                 for key in expected.keys():
                     assert item[key] == expected[key]
                 found = True
@@ -187,8 +192,11 @@ def test_generate_report(
 def count_results(data):
     real_secrets = 0
     false_secrets = 0
-    for secret in data['results']:
-        if SecretClassToPrint.from_class(VerifiedResult[secret['category']]) == SecretClassToPrint.REAL_SECRET:  # noqa: E501
+    for secret in data["results"]:
+        if (
+            SecretClassToPrint.from_class(VerifiedResult[secret["category"]])
+            == SecretClassToPrint.REAL_SECRET
+        ):  # noqa: E501
             real_secrets += 1
         else:
             false_secrets += 1
@@ -225,25 +233,29 @@ def baseline_file():
     """,
     )[1:]
 
-    with create_file_with_content(first_content) as first_file, \
-            create_file_with_content(second_content) as second_file, \
-            create_file_with_content(third_content) as third_file, \
-            mock_named_temporary_file() as baseline_file, \
-            transient_settings({
-                'plugins_used': [
-                    {'name': 'BasicAuthDetector'},
-                    {'name': 'JwtTokenDetector'},
-                    {'name': 'AWSKeyDetector'},
-
+    with (
+        create_file_with_content(first_content) as first_file,
+        create_file_with_content(second_content) as second_file,
+        create_file_with_content(third_content) as third_file,
+        mock_named_temporary_file() as baseline_file,
+        transient_settings(
+            {
+                "plugins_used": [
+                    {"name": "BasicAuthDetector"},
+                    {"name": "JwtTokenDetector"},
+                    {"name": "AWSKeyDetector"},
                 ],
-                'filters_used': [
+                "filters_used": [
                     {
-                        'path':
-                            'detect_secrets.filters.common.is_ignored_due_to_verification_policies',
-                        'min_level': 2,
+                        "path": (
+                            "detect_secrets.filters.common.is_ignored_due_to_verification_policies"
+                        ),
+                        "min_level": 2,
                     },
                 ],
-            }):
+            }
+        ),
+    ):
         secrets = SecretsCollection()
         secrets.scan_file(first_file)
         secrets.scan_file(second_file)

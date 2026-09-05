@@ -4,14 +4,16 @@ import string
 from abc import ABCMeta
 from contextlib import contextmanager
 from typing import Any
-from typing import cast
 from typing import Dict
 from typing import Generator
+from typing import Optional
 from typing import Set
+from typing import cast
+
+from detect_secrets.util.code_snippet import CodeSnippet
 
 from ..core.potential_secret import PotentialSecret
 from .base import BasePlugin
-from detect_secrets.util.code_snippet import CodeSnippet
 
 
 class HighEntropyStringsPlugin(BasePlugin, metaclass=ABCMeta):
@@ -20,7 +22,7 @@ class HighEntropyStringsPlugin(BasePlugin, metaclass=ABCMeta):
     def __init__(self, charset: str, limit: float) -> None:
         if limit < 0 or limit > 8:
             raise ValueError(
-                'The limit set for HighEntropyStrings must be between 0.0 and 8.0',
+                "The limit set for HighEntropyStrings must be between 0.0 and 8.0",
             )
 
         self.charset = charset
@@ -46,7 +48,7 @@ class HighEntropyStringsPlugin(BasePlugin, metaclass=ABCMeta):
         filename: str,
         line: str,
         line_number: int = 0,
-        context: CodeSnippet = None,
+        context: Optional[CodeSnippet] = None,
         enable_eager_search: bool = False,
         **kwargs: Any,
     ) -> Set[PotentialSecret]:
@@ -64,8 +66,8 @@ class HighEntropyStringsPlugin(BasePlugin, metaclass=ABCMeta):
                 secret
                 for secret in (output or set())
                 if (
-                    self.calculate_shannon_entropy(cast(str, secret.secret_value)) >
-                    self.entropy_limit
+                    self.calculate_shannon_entropy(cast(str, secret.secret_value))
+                    > self.entropy_limit
                 )
             }
 
@@ -91,25 +93,25 @@ class HighEntropyStringsPlugin(BasePlugin, metaclass=ABCMeta):
         for x in self.charset:
             p_x = float(data.count(x)) / len(data)
             if p_x > 0:
-                entropy += - p_x * math.log(p_x, 2)
+                entropy += -p_x * math.log(p_x, 2)
 
         return entropy
 
     def format_scan_result(self, secret: PotentialSecret) -> str:
         if not secret.secret_value:
             # This is the best we can do, since we don't have the raw value to process.
-            return 'True'
+            return "True"
 
         entropy = round(self.calculate_shannon_entropy(secret.secret_value), 3)
         if entropy < self.entropy_limit:
-            return f'False ({entropy})'
+            return f"False ({entropy})"
 
-        return f'True  ({entropy})'
+        return f"True  ({entropy})"
 
     def json(self) -> Dict[str, Any]:
         return {
             **super().json(),
-            'limit': self.entropy_limit,
+            "limit": self.entropy_limit,
         }
 
     @contextmanager
@@ -125,9 +127,9 @@ class HighEntropyStringsPlugin(BasePlugin, metaclass=ABCMeta):
         """
         old_regex = self.regex
 
-        regex_alternative = r'([{}]+)'.format(re.escape(self.charset))
+        regex_alternative = r"([{}]+)".format(re.escape(self.charset))
         if is_exact_match:
-            regex_alternative = r'^' + regex_alternative + r'$'
+            regex_alternative = r"^" + regex_alternative + r"$"
 
         self.regex = re.compile(regex_alternative)
 
@@ -139,16 +141,17 @@ class HighEntropyStringsPlugin(BasePlugin, metaclass=ABCMeta):
 
 class Base64HighEntropyString(HighEntropyStringsPlugin):
     """Scans for random-looking base64 encoded strings."""
-    secret_type = 'Base64 High Entropy String'
+
+    secret_type = "Base64 High Entropy String"
 
     def __init__(self, limit: float = 4.5) -> None:
         super().__init__(
             charset=(
                 string.ascii_letters
                 + string.digits
-                + '+/'  # Regular base64
-                + '\\-_'  # Url-safe base64
-                + '='  # Padding
+                + "+/"  # Regular base64
+                + "\\-_"  # Url-safe base64
+                + "="  # Padding
             ),
             limit=limit,
         )
@@ -157,7 +160,7 @@ class Base64HighEntropyString(HighEntropyStringsPlugin):
 class HexHighEntropyString(HighEntropyStringsPlugin):
     """Scans for random-looking hex encoded strings."""
 
-    secret_type = 'Hex High Entropy String'
+    secret_type = "Hex High Entropy String"
 
     def __init__(self, limit: float = 3.0) -> None:
         super().__init__(

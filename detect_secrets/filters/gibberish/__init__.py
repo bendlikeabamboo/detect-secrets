@@ -11,7 +11,6 @@ from ...plugins.private_key import PrivateKeyDetector
 from ...settings import get_settings
 from ..util import compute_file_hash
 
-
 Model = Any
 
 
@@ -32,26 +31,27 @@ def initialize(model_path: Optional[str] = None, limit: float = 3.7) -> None:
     """
     path = model_path
     if not path:
-        path = os.path.join(__path__[0], 'rfc.model')
+        path = os.path.join(__path__[0], "rfc.model")
 
     model = get_model()
 
     from gibberish_detector import serializer
     from gibberish_detector.exceptions import ParsingError
+
     with open(path) as f:
         try:
             model.update(serializer.deserialize(f.read()))
         except ParsingError:
-            raise ValueError('Invalid model.')
+            raise ValueError("Invalid model.")
 
     config: Dict[str, Union[float, str]] = {
-        'limit': limit,
+        "limit": limit,
     }
     if model_path:
-        config['model'] = model_path
-        config['file_hash'] = compute_file_hash(model_path)
+        config["model"] = model_path
+        config["file_hash"] = compute_file_hash(model_path)
 
-    path = f'{__name__}.should_exclude_secret'
+    path = f"{__name__}.should_exclude_secret"
     get_settings().filters[path] = config
 
 
@@ -68,16 +68,17 @@ def should_exclude_secret(secret: str, plugin: Optional[Plugin] = None) -> bool:
     # works best with non-hex strings, since hex strings have a too limited charset
     # to fit our trained models. As such, we cannot make a deterministic decision
     # in such cases.
-    if not (set(secret) - set(string.hexdigits + '-')):
+    if not (set(secret) - set(string.hexdigits + "-")):
         return False
 
     if not get_model().data or not get_model().charset:
-        raise AssertionError('Attempting to use uninitialized gibberish model.')
+        raise AssertionError("Attempting to use uninitialized gibberish model.")
 
     from gibberish_detector.detector import Detector
+
     detector = Detector(
         model=get_model(),
-        threshold=get_settings().filters[f'{__name__}.should_exclude_secret']['limit'],
+        threshold=get_settings().filters[f"{__name__}.should_exclude_secret"]["limit"],
     )
 
     # TODO: secret.lower() is only used currently, since the default model is only
@@ -90,6 +91,7 @@ def should_exclude_secret(secret: str, plugin: Optional[Plugin] = None) -> bool:
 
 
 @lru_cache(maxsize=1)
-def get_model() -> 'Model':
+def get_model() -> "Model":
     from gibberish_detector.model import Model
-    return Model(charset='')
+
+    return Model(charset="")

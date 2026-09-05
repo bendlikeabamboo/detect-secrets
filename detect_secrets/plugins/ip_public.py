@@ -17,7 +17,8 @@ class IPPublicDetector(RegexBasedDetector):
     https://www.iana.org/assignments/ipv4-address-space/ipv4-address-space.xhtml
     https://en.wikipedia.org/wiki/Private_network
     """
-    secret_type = 'Public IP (ipv4)'
+
+    secret_type = "Public IP (ipv4)"
 
     denylist_ipv4_address = r"""
         (?<![\w.])         # Negative lookbehind: Ensures no preceding word character or dot

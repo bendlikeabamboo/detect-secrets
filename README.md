@@ -172,10 +172,11 @@ from detect_secrets.settings import default_settings
 
 secrets = SecretsCollection()
 with default_settings():
-    secrets.scan_file('test_data/config.ini')
+    secrets.scan_file("test_data/config.ini")
 
 
 import json
+
 print(json.dumps(secrets.json(), indent=2))
 ```
 
@@ -186,40 +187,40 @@ from detect_secrets import SecretsCollection
 from detect_secrets.settings import transient_settings
 
 secrets = SecretsCollection()
-with transient_settings({
-    # Only run scans with only these plugins.
-    # This format is the same as the one that is saved in the generated baseline.
-    'plugins_used': [
-        # Example of configuring a built-in plugin
-        {
-            'name': 'Base64HighEntropyString',
-            'limit': 5.0,
-        },
-
-        # Example of using a custom plugin
-        {
-            'name': 'HippoDetector',
-            'path': 'file:///Users/aaronloo/Documents/github/detect-secrets/testing/plugins.py',
-        },
-    ],
-
-    # We can also specify whichever additional filters we want.
-    # This is an example of using the function `is_identified_by_ML_model` within the
-    # local file `./private-filters/example.py`.
-    'filters_used': [
-        {
-            'path': 'file://private-filters/example.py::is_identified_by_ML_model',
-        },
-    ]
-}) as settings:
+with transient_settings(
+    {
+        # Only run scans with only these plugins.
+        # This format is the same as the one that is saved in the generated baseline.
+        "plugins_used": [
+            # Example of configuring a built-in plugin
+            {
+                "name": "Base64HighEntropyString",
+                "limit": 5.0,
+            },
+            # Example of using a custom plugin
+            {
+                "name": "HippoDetector",
+                "path": "file:///Users/aaronloo/Documents/github/detect-secrets/testing/plugins.py",
+            },
+        ],
+        # We can also specify whichever additional filters we want.
+        # This is an example of using the function `is_identified_by_ML_model` within the
+        # local file `./private-filters/example.py`.
+        "filters_used": [
+            {
+                "path": "file://private-filters/example.py::is_identified_by_ML_model",
+            },
+        ],
+    }
+) as settings:
     # If we want to make any further adjustments to the created settings object (e.g.
     # disabling default filters), we can do so as such.
     settings.disable_filters(
-        'detect_secrets.filters.heuristic.is_prefixed_with_dollar_sign',
-        'detect_secrets.filters.heuristic.is_likely_id_string',
+        "detect_secrets.filters.heuristic.is_prefixed_with_dollar_sign",
+        "detect_secrets.filters.heuristic.is_likely_id_string",
     )
 
-    secrets.scan_file('test_data/config.ini')
+    secrets.scan_file("test_data/config.ini")
 ```
 
 ## Installation
@@ -427,7 +428,7 @@ There are times when we want to exclude a false positive from blocking a commit,
 a baseline to do so. You can do so by adding a comment as such:
 
 ```python
-secret = "hunter2"      # pragma: allowlist secret
+secret = "hunter2"  # pragma: allowlist secret
 ```
 
 or
@@ -565,7 +566,7 @@ Sometimes, you want to apply an exclusion to a specific line, rather than global
 You can do so with inline allowlisting as such:
 
 ```python
-API_KEY = 'this-will-ordinarily-be-detected-by-a-plugin'    # pragma: allowlist secret
+API_KEY = "this-will-ordinarily-be-detected-by-a-plugin"  # pragma: allowlist secret
 ```
 
 These comments are supported in multiple languages. e.g.
@@ -578,7 +579,7 @@ You can also use:
 
 ```python
 # pragma: allowlist nextline secret
-API_KEY = 'WillAlsoBeIgnored'
+API_KEY = "WillAlsoBeIgnored"
 ```
 
 This may be a convenient way for you to ignore secrets, without needing to regenerate the entire

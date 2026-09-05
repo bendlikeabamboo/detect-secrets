@@ -24,6 +24,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 """
+
 import re
 
 from .base import RegexBasedDetector
@@ -37,18 +38,18 @@ class PrivateKeyDetector(RegexBasedDetector):
     lines are present in the analyzed string.
     """
 
-    secret_type = 'Private Key'
+    secret_type = "Private Key"
 
     denylist = [
         re.compile(regexp)
         for regexp in (
-            r'BEGIN DSA PRIVATE KEY',
-            r'BEGIN EC PRIVATE KEY',
-            r'BEGIN OPENSSH PRIVATE KEY',
-            r'BEGIN PGP PRIVATE KEY BLOCK',
-            r'BEGIN PRIVATE KEY',
-            r'BEGIN RSA PRIVATE KEY',
-            r'BEGIN SSH2 ENCRYPTED PRIVATE KEY',
-            r'PuTTY-User-Key-File-2',
+            r"BEGIN DSA PRIVATE KEY",
+            r"BEGIN EC PRIVATE KEY",
+            r"BEGIN OPENSSH PRIVATE KEY",
+            r"BEGIN PGP PRIVATE KEY BLOCK",
+            r"BEGIN PRIVATE KEY",
+            r"BEGIN RSA PRIVATE KEY",
+            r"BEGIN SSH2 ENCRYPTED PRIVATE KEY",
+            r"PuTTY-User-Key-File-2",
         )
     ]

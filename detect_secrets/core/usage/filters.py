@@ -16,67 +16,66 @@ from .common import valid_path
 
 def add_filter_options(parent: argparse.ArgumentParser) -> None:
     parser = parent.add_argument_group(
-        title='filter options',
+        title="filter options",
         description=(
-            'Configure settings for filtering out secrets after they are flagged '
-            'by the engine.'
+            "Configure settings for filtering out secrets after they are flagged by the engine."
         ),
     )
 
     verify_group = parser.add_mutually_exclusive_group()
     verify_group.add_argument(
-        '-n',
-        '--no-verify',
-        action='store_true',
-        help='Disables additional verification of secrets via network call.',
+        "-n",
+        "--no-verify",
+        action="store_true",
+        help="Disables additional verification of secrets via network call.",
     )
     verify_group.add_argument(
-        '--only-verified',
-        action='store_true',
-        help='Only flags secrets that can be verified.',
+        "--only-verified",
+        action="store_true",
+        help="Only flags secrets that can be verified.",
     )
 
     parser.add_argument(
-        '--exclude-lines',
+        "--exclude-lines",
         type=str,
-        action='append',
-        help='If lines match this regex, it will be ignored.',
+        action="append",
+        help="If lines match this regex, it will be ignored.",
     )
     parser.add_argument(
-        '--exclude-files',
+        "--exclude-files",
         type=str,
-        action='append',
-        help='If filenames match this regex, it will be ignored.',
+        action="append",
+        help="If filenames match this regex, it will be ignored.",
     )
     parser.add_argument(
-        '--exclude-secrets',
+        "--exclude-secrets",
         type=str,
-        action='append',
-        help='If secrets match this regex, it will be ignored.',
+        action="append",
+        help="If secrets match this regex, it will be ignored.",
     )
 
     if filters.wordlist.is_feature_enabled():
         parser.add_argument(
-            '--word-list',
+            "--word-list",
             type=valid_path,
             help=(
-                'Text file with a list of words, '
-                'if a secret contains a word in the list we ignore it.'
+                "Text file with a list of words, "
+                "if a secret contains a word in the list we ignore it."
             ),
-            dest='word_list_file',
+            dest="word_list_file",
         )
 
     if filters.gibberish.is_feature_enabled():
         parser.add_argument(
-            '--gibberish-model',
+            "--gibberish-model",
             type=valid_path,
-            help='Path to model trained with gibberish-detector.',
-            dest='gibberish_model_file',
+            help="Path to model trained with gibberish-detector.",
+            dest="gibberish_model_file",
         )
         parser.add_argument(
-            '--gibberish-limit',
+            "--gibberish-limit",
             type=float,
-            help='Threshold to determine whether a string is gibberish.',
+            help="Threshold to determine whether a string is gibberish.",
         )
 
     _add_custom_filters(parser)
@@ -86,90 +85,85 @@ def add_filter_options(parent: argparse.ArgumentParser) -> None:
 def _add_custom_filters(parser: argparse._ArgumentGroup) -> None:
     def valid_looking_paths(path: str) -> str:
         parsed = parse_path(path)
-        if parsed.kind == 'invalid':
-            raise argparse.ArgumentTypeError(f'{path} is not a valid filter path.')
+        if parsed.kind == "invalid":
+            raise argparse.ArgumentTypeError(f"{path} is not a valid filter path.")
 
-        if parsed.kind == 'file':
+        if parsed.kind == "file":
             if parsed.function_name is None:
                 raise argparse.ArgumentTypeError(
-                    'Did not specify function name for imported file.',
+                    "Did not specify function name for imported file.",
                 )
             if not os.path.isfile(parsed.file_path):
                 raise argparse.ArgumentTypeError(
-                    f'{parsed.file_path} is not a valid file.',
+                    f"{parsed.file_path} is not a valid file.",
                 )
 
         return path
 
     parser.add_argument(
-        '-f',
-        '--filter',
+        "-f",
+        "--filter",
         type=valid_looking_paths,
         nargs=1,
-        action='append',        # so we can support multiple flags with same value
+        action="append",  # so we can support multiple flags with same value
         help=(
-            'Specify path to custom filter. '
-            'May be a python module path (e.g. detect_secrets.filters.common.is_invalid_file) or '
-            'a local file path (e.g. file://path/to/file.py::function_name).'
+            "Specify path to custom filter. "
+            "May be a python module path (e.g. detect_secrets.filters.common.is_invalid_file) or "
+            "a local file path (e.g. file://path/to/file.py::function_name)."
         ),
     )
 
 
 def _add_disable_flag(parser: argparse._ArgumentGroup) -> None:
     parser.add_argument(
-        '--disable-filter',
+        "--disable-filter",
         type=str,
         nargs=1,
-        action='append',        # so we can support multiple flags with same value
-        help='Specify filter to disable. e.g. detect_secrets.filters.common.is_invalid_file',
+        action="append",  # so we can support multiple flags with same value
+        help="Specify filter to disable. e.g. detect_secrets.filters.common.is_invalid_file",
     )
 
 
 def parse_args(args: argparse.Namespace) -> None:
     if args.exclude_lines:
-        get_settings().filters['detect_secrets.filters.regex.should_exclude_line'] = {
-            'pattern': args.exclude_lines,
+        get_settings().filters["detect_secrets.filters.regex.should_exclude_line"] = {
+            "pattern": args.exclude_lines,
         }
 
     if args.exclude_files:
-        get_settings().filters['detect_secrets.filters.regex.should_exclude_file'] = {
-            'pattern': args.exclude_files,
+        get_settings().filters["detect_secrets.filters.regex.should_exclude_file"] = {
+            "pattern": args.exclude_files,
         }
 
     if args.exclude_secrets:
-        get_settings().filters['detect_secrets.filters.regex.should_exclude_secret'] = {
-            'pattern': args.exclude_secrets,
+        get_settings().filters["detect_secrets.filters.regex.should_exclude_secret"] = {
+            "pattern": args.exclude_secrets,
         }
 
-    if (
-        filters.wordlist.is_feature_enabled()
-        and args.word_list_file
-    ):
+    if filters.wordlist.is_feature_enabled() and args.word_list_file:
         filters.wordlist.initialize(args.word_list_file)
 
     if filters.gibberish.is_feature_enabled():
         kwargs = {}
         if args.gibberish_model_file:
-            kwargs['model_path'] = args.gibberish_model_file
+            kwargs["model_path"] = args.gibberish_model_file
 
         if args.gibberish_limit:
-            kwargs['limit'] = args.gibberish_limit
+            kwargs["limit"] = args.gibberish_limit
 
         filters.gibberish.initialize(**kwargs)
 
     if not args.no_verify:
         get_settings().filters[
-            'detect_secrets.filters.common.is_ignored_due_to_verification_policies'
+            "detect_secrets.filters.common.is_ignored_due_to_verification_policies"
         ] = {
-            'min_level': (
-                VerifiedResult.VERIFIED_TRUE
-                if args.only_verified
-                else VerifiedResult.UNVERIFIED
+            "min_level": (
+                VerifiedResult.VERIFIED_TRUE if args.only_verified else VerifiedResult.UNVERIFIED
             ).value,
         }
     else:
         get_settings().disable_filters(
-            'detect_secrets.filters.common.is_ignored_due_to_verification_policies',
+            "detect_secrets.filters.common.is_ignored_due_to_verification_policies",
         )
 
     if args.disable_filter:
@@ -194,17 +188,17 @@ def parse_args(args: argparse.Namespace) -> None:
 
 def _raise_if_custom_filter_path_is_invalid(path: str) -> None:
     parsed = parse_path(path)
-    if parsed.kind == 'invalid':
+    if parsed.kind == "invalid":
         raise argparse.ArgumentTypeError(
-            'Invalid Python module path for custom filter.',
+            "Invalid Python module path for custom filter.",
         )
 
-    if parsed.kind == 'module':
+    if parsed.kind == "module":
         try:
-            module_path, function_name = path.rsplit('.', 1)
+            module_path, function_name = path.rsplit(".", 1)
         except ValueError:
             raise argparse.ArgumentTypeError(
-                'Invalid Python module path for custom filter.',
+                "Invalid Python module path for custom filter.",
             )
 
         try:
@@ -220,19 +214,19 @@ def _raise_if_custom_filter_path_is_invalid(path: str) -> None:
             )
 
         if not inspect.isfunction(function):
-            raise argparse.ArgumentTypeError(f'{path} is not a filter function.')
+            raise argparse.ArgumentTypeError(f"{path} is not a filter function.")
 
-    elif parsed.kind == 'file':
+    elif parsed.kind == "file":
         if parsed.function_name is None:
             raise argparse.ArgumentTypeError(
-                'Did not specify function name for imported file.',
+                "Did not specify function name for imported file.",
             )
 
         try:
             module = import_file_as_module(parsed.file_path)
         except (FileNotFoundError, InvalidFile):
             raise argparse.ArgumentTypeError(
-                f'Cannot import {parsed.file_path} as custom filter.',
+                f"Cannot import {parsed.file_path} as custom filter.",
             )
 
         try:

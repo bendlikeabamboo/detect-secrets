@@ -6,13 +6,13 @@ from typing import Literal
 from typing import Optional
 from typing import Tuple
 
-CustomPathKind = Literal['module', 'file', 'invalid']
+CustomPathKind = Literal["module", "file", "invalid"]
 
 
 class CustomPath:
     def __init__(
         self,
-        kind: CustomPathKind = 'invalid',
+        kind: CustomPathKind = "invalid",
         module_path: Optional[str] = None,
         file_path: Optional[str] = None,
         function_name: Optional[str] = None,
@@ -24,10 +24,10 @@ class CustomPath:
 
     def __repr__(self) -> str:
         return (
-            f'CustomPath(kind={self.kind!r}, '
-            f'module_path={self.module_path!r}, '
-            f'file_path={self.file_path!r}, '
-            f'function_name={self.function_name!r})'
+            f"CustomPath(kind={self.kind!r}, "
+            f"module_path={self.module_path!r}, "
+            f"file_path={self.file_path!r}, "
+            f"function_name={self.function_name!r})"
         )
 
     def __eq__(self, other: object) -> bool:
@@ -41,32 +41,32 @@ class CustomPath:
         )
 
 
-_DRIVE_AFTER_SLASH = re.compile(r'^/[A-Za-z]:[\\/]')
+_DRIVE_AFTER_SLASH = re.compile(r"^/[A-Za-z]:[\\/]")
 
 
 def _strip_file_scheme(path: str) -> Tuple[str, bool]:
-    if path.startswith('file:///'):
-        return '/' + path[len('file:///'):], True
-    if path.startswith('file://'):
-        return path[len('file://'):], True
+    if path.startswith("file:///"):
+        return "/" + path[len("file:///") :], True
+    if path.startswith("file://"):
+        return path[len("file://") :], True
     return path, False
 
 
 def parse_path(path: str) -> CustomPath:
     remainder, had_file_scheme = _strip_file_scheme(path)
 
-    if not had_file_scheme and '://' in remainder:
+    if not had_file_scheme and "://" in remainder:
         return CustomPath()
 
-    if '::' in remainder:
-        file_part, _, function_name = remainder.partition('::')
+    if "::" in remainder:
+        file_part, _, function_name = remainder.partition("::")
 
         if not function_name or not function_name.isidentifier():
             return CustomPath()
 
         file_part = _normalize_file_part(file_part, had_file_scheme)
         return CustomPath(
-            kind='file',
+            kind="file",
             file_path=file_part,
             function_name=function_name,
         )
@@ -74,13 +74,13 @@ def parse_path(path: str) -> CustomPath:
     if had_file_scheme:
         remainder = _normalize_file_part(remainder, had_file_scheme)
         return CustomPath(
-            kind='file',
+            kind="file",
             file_path=remainder,
             function_name=None,
         )
 
     return CustomPath(
-        kind='module',
+        kind="module",
         module_path=path,
     )
 
@@ -110,7 +110,7 @@ def get_relative_path_if_in_cwd(path: str) -> Optional[str]:
     cwd = os.getcwd()
     try:
         rel = os.path.relpath(filepath, cwd)
-        if rel == '.':
+        if rel == ".":
             rel = os.path.basename(filepath)
     except ValueError:
         return None
@@ -122,15 +122,15 @@ def get_relative_path_if_in_cwd(path: str) -> Optional[str]:
 
 
 def convert_local_os_path(path: str) -> str:
-    scheme_prefix = ''
+    scheme_prefix = ""
     remainder = path
-    if path.startswith('file://'):
-        scheme_prefix = 'file://'
-        remainder = path[len('file://'):]
+    if path.startswith("file://"):
+        scheme_prefix = "file://"
+        remainder = path[len("file://") :]
 
-    if os.sep == '/':
-        remainder = remainder.replace('\\', '/')
+    if os.sep == "/":
+        remainder = remainder.replace("\\", "/")
     else:
-        remainder = remainder.replace('/', '\\')
+        remainder = remainder.replace("/", "\\")
 
     return scheme_prefix + remainder

@@ -6,10 +6,10 @@ import statistics
 import subprocess
 import sys
 
-from monotonic import monotonic
-
 from detect_secrets.core.color import AnsiColor
 from detect_secrets.core.color import colorize
+from monotonic import monotonic
+
 from detect_secrets.core.usage import PluginOptions
 from detect_secrets.util import get_root_directory
 
@@ -18,13 +18,13 @@ def main():
     args = get_arguments()
 
     print(
-        'Running performance tests on: {}'.format(
-            ', '.join(args.plugin),
+        "Running performance tests on: {}".format(
+            ", ".join(args.plugin),
         ),
         file=sys.stderr,
     )
     print(
-        'for: {}'.format(args.filenames),
+        "for: {}".format(args.filenames),
         file=sys.stderr,
     )
 
@@ -42,7 +42,7 @@ def main():
     timings = {}
     if len(args.plugin) == len(PluginOptions.all_plugins):
         # Only run benchmarks for all the cases, if already running all plugins
-        timings['all-plugins'] = time_execution(
+        timings["all-plugins"] = time_execution(
             filenames=args.filenames,
             timeout=args.harakiri,
             num_iterations=args.num_iterations,
@@ -64,65 +64,56 @@ def main():
 
 
 def get_arguments():
-    plugins = [
-        info.classname
-        for info in PluginOptions.all_plugins
-    ]
+    plugins = [info.classname for info in PluginOptions.all_plugins]
 
-    parser = argparse.ArgumentParser(description='Run some benchmarks.')
+    parser = argparse.ArgumentParser(description="Run some benchmarks.")
     parser.add_argument(
-        'filenames',
+        "filenames",
         nargs=argparse.REMAINDER,
-        help='Filenames to check or detect-secrets compatible arguments.',
+        help="Filenames to check or detect-secrets compatible arguments.",
     )
     parser.add_argument(
-        '--pretty',
-        action='store_true',
-        help='Human readable output.',
+        "--pretty",
+        action="store_true",
+        help="Human readable output.",
     )
     parser.add_argument(
-        '--plugin',
-        default=None,       # needs to be None, otherwise append won't work as expected
+        "--plugin",
+        default=None,  # needs to be None, otherwise append won't work as expected
         choices=plugins,
-        action='append',
-        help=(
-            'Specifies a plugin to test. May provide multiple values. '
-            'Defaults to all.'
-        ),
+        action="append",
+        help=("Specifies a plugin to test. May provide multiple values. Defaults to all."),
     )
     parser.add_argument(
-        '--harakiri',
+        "--harakiri",
         default=5,
         type=assert_positive(float),
-        help=(
-            'Specifies an upper bound for the number of seconds to wait '
-            'per execution.'
-        ),
+        help=("Specifies an upper bound for the number of seconds to wait per execution."),
     )
     parser.add_argument(
-        '-n',
-        '--num-iterations',
+        "-n",
+        "--num-iterations",
         default=1,
         type=assert_positive(int),
         help=(
-            'Specifies the number of times to run the test. '
-            'Results will be averaged over this value.'
+            "Specifies the number of times to run the test. "
+            "Results will be averaged over this value."
         ),
     )
     parser.add_argument(
-        '--baseline',
+        "--baseline",
         type=assert_valid_file,
         help=(
-            'If provided, will compare performance with provided baseline. '
-            'Assumes pretty output (otherwise, you can do the comparison '
-            'yourself).'
+            "If provided, will compare performance with provided baseline. "
+            "Assumes pretty output (otherwise, you can do the comparison "
+            "yourself)."
         ),
     )
 
     args = parser.parse_args()
     if not args.filenames:
         if args.baseline:
-            args.filenames = args.baseline['filenames']
+            args.filenames = args.baseline["filenames"]
         else:
             args.filenames = [get_root_directory()]
 
@@ -137,7 +128,7 @@ def assert_positive(type):
         value = type(string)
         if value <= 0:
             raise argparse.ArgumentTypeError(
-                '{} must be a positive {}.'.format(
+                "{} must be a positive {}.".format(
                     string,
                     type.__name__,
                 ),
@@ -151,7 +142,7 @@ def assert_positive(type):
 def assert_valid_file(string):
     if not os.path.isfile(string):
         raise argparse.ArgumentTypeError(
-            '{} must be a valid file.'.format(string),
+            "{} must be a valid file.".format(string),
         )
 
     with open(string) as f:
@@ -175,7 +166,7 @@ def time_execution(filenames, timeout, num_iterations=1, flags=None):
         start_time = monotonic()
         try:
             subprocess.check_output(
-                'detect-secrets scan'.split() + filenames + flags,
+                "detect-secrets scan".split() + filenames + flags,
                 timeout=timeout,
             )
             scores.append(monotonic() - start_time)
@@ -196,33 +187,35 @@ def print_output(timings, args):
     """
     if not args.pretty and not args.baseline:
         print(
-            json.dumps({
-                'filenames': args.filenames,
-                'timings': timings,
-            }),
+            json.dumps(
+                {
+                    "filenames": args.filenames,
+                    "timings": timings,
+                }
+            ),
         )
         return
 
     # Print header
-    baseline = args.baseline['timings'] if args.baseline else {}
+    baseline = args.baseline["timings"] if args.baseline else {}
     if not baseline:
-        print('-' * 45)
-        print('{:<25s}{:>15s}'.format('plugin', 'time'))
-        print('-' * 45)
+        print("-" * 45)
+        print("{:<25s}{:>15s}".format("plugin", "time"))
+        print("-" * 45)
     else:
-        print('-' * 60)
-        print('{:<25s}{:>11s}{:>22s}'.format('plugin', 'time', 'change'))
-        print('-' * 60)
+        print("-" * 60)
+        print("{:<25s}{:>11s}{:>22s}".format("plugin", "time", "change"))
+        print("-" * 60)
 
     # Print content
-    if 'all-plugins' in timings:
+    if "all-plugins" in timings:
         print_line(
-            'All Plugins',
-            time=timings['all-plugins'],
-            baseline=_get_baseline_value(baseline, 'all-plugins'),
+            "All Plugins",
+            time=timings["all-plugins"],
+            baseline=_get_baseline_value(baseline, "all-plugins"),
             timeout=args.harakiri,
         )
-        del timings['all-plugins']
+        del timings["all-plugins"]
 
     for key in sorted(timings):
         print_line(
@@ -234,9 +227,9 @@ def print_output(timings, args):
 
     # Print footer line
     if not args.baseline:
-        print('-' * 45)
+        print("-" * 45)
     else:
-        print('-' * 60)
+        print("-" * 60)
 
 
 def _get_baseline_value(baseline, key):
@@ -264,9 +257,9 @@ def print_line(name, time, baseline, timeout):
         execution or baseline execution exceeds timeout.
     """
     if not time:
-        time_string = 'Timeout exceeded!'
+        time_string = "Timeout exceeded!"
     else:
-        time_string = '{}s'.format(str(time))
+        time_string = "{}s".format(str(time))
 
     if baseline is not None:
         if time and baseline:
@@ -283,29 +276,29 @@ def print_line(name, time, baseline, timeout):
 
         if difference > 0:
             difference_string = colorize(
-                '▲  {}'.format(difference),
+                "▲  {}".format(difference),
                 AnsiColor.LIGHT_GREEN,
             )
-            difference_string = '{:>22s}'.format(difference_string)
+            difference_string = "{:>22s}".format(difference_string)
         elif difference < 0:
             difference_string = colorize(
-                '▼ {}'.format(difference),
+                "▼ {}".format(difference),
                 AnsiColor.RED,
             )
-            difference_string = '{:>22s}'.format(difference_string)
+            difference_string = "{:>22s}".format(difference_string)
         else:
-            difference_string = '{:>10s}'.format('-')
+            difference_string = "{:>10s}".format("-")
 
         print(
-            '{:<25s}{:^20s}{}'.format(
+            "{:<25s}{:^20s}{}".format(
                 name,
                 time_string,
                 difference_string,
             ),
         )
     else:
-        print('{:<25s}{:>20s}'.format(name, time_string))
+        print("{:<25s}{:>20s}".format(name, time_string))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

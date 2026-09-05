@@ -1,8 +1,9 @@
 """
 Responsible for input/output for audit related functions.
 """
-import os
+
 import platform
+import subprocess
 import sys
 from enum import Enum
 
@@ -19,16 +20,16 @@ def print_error(message: str) -> None:
     print(message, file=sys.stderr)
 
 
-def clear_screen() -> None:     # pragma: no cover
-    command = 'clear'
-    if platform.system() == 'Windows':
-        command = 'cls'
-    os.system(command)
+def clear_screen() -> None:  # pragma: no cover
+    command = "clear"
+    if platform.system() == "Windows":
+        command = "cls"
+    subprocess.run(command, shell=True, check=False)
 
 
 def print_context(context: SecretContext) -> None:
-    if not context.snippet:     # pragma: no cover
-        raise ValueError('You should be using `print_secret_not_found` instead.')
+    if not context.snippet:  # pragma: no cover
+        raise ValueError("You should be using `print_secret_not_found` instead.")
 
     _print_header(context)
 
@@ -39,45 +40,45 @@ def print_context(context: SecretContext) -> None:
         context.snippet.target_line = colorize(context.snippet.target_line, AnsiColor.BOLD)
     print_message(str(context.snippet))
 
-    print_message('-' * 10)
+    print_message("-" * 10)
 
 
 def print_secret_not_found(context: SecretContext) -> None:
-    if context.snippet:     # pragma: no cover
+    if context.snippet:  # pragma: no cover
         raise ValueError(
-            'Are you sure you want to do this? The secret *was* found in this context. '
-            'If you are certain you want to override this behavior, be sure to null out '
-            'the `context.snippet` value.',
+            "Are you sure you want to do this? The secret *was* found in this context. "
+            "If you are certain you want to override this behavior, be sure to null out "
+            "the `context.snippet` value.",
         )
 
     _print_header(context)
 
     print_message(str(context.error))
-    print_message('-' * 10)
+    print_message("-" * 10)
 
 
-def _print_header(context: SecretContext) -> None:      # pragma: no cover
+def _print_header(context: SecretContext) -> None:  # pragma: no cover
     print_message(
-        '{secret} {current_count} {of} {total_count}'.format(
-            secret=colorize('Secret:     ', AnsiColor.BOLD),
+        "{secret} {current_count} {of} {total_count}".format(
+            secret=colorize("Secret:     ", AnsiColor.BOLD),
             current_count=colorize(str(context.current_index), AnsiColor.PURPLE),
-            of=colorize('of', AnsiColor.BOLD),
+            of=colorize("of", AnsiColor.BOLD),
             total_count=colorize(str(context.num_total_secrets), AnsiColor.PURPLE),
         ),
     )
     print_message(
-        '{prefix} {filename}'.format(
-            prefix=colorize('Filename:   ', AnsiColor.BOLD),
+        "{prefix} {filename}".format(
+            prefix=colorize("Filename:   ", AnsiColor.BOLD),
             filename=colorize(context.secret.filename, AnsiColor.PURPLE),
         ),
     )
     print_message(
-        '{prefix} {secret_type}'.format(
-            prefix=colorize('Secret Type:', AnsiColor.BOLD),
+        "{prefix} {secret_type}".format(
+            prefix=colorize("Secret Type:", AnsiColor.BOLD),
             secret_type=colorize(context.secret.type, AnsiColor.PURPLE),
         ),
     )
-    print_message('-' * 10)
+    print_message("-" * 10)
 
     if context.header:
         print(context.header)
@@ -86,7 +87,7 @@ def _print_header(context: SecretContext) -> None:      # pragma: no cover
 def get_user_decision(
     prompt_secret_decision: bool = True,
     can_step_back: bool = False,
-) -> 'InputOptions':
+) -> "InputOptions":
     """
     :param prompt_secret_decision: if False, won't ask to label secret.
         e.g. if the secret isn't found on the line
@@ -96,7 +97,7 @@ def get_user_decision(
     user_input = None
     while user_input not in prompter.valid_input:
         if user_input:
-            print('Invalid input.')     # type: ignore # Statement unreachable? Come on mypy...
+            print("Invalid input.")
 
         user_input = input(str(prompter))
         if user_input:
@@ -106,11 +107,11 @@ def get_user_decision(
 
 
 class InputOptions(Enum):
-    YES = 'Y'
-    NO = 'N'
-    SKIP = 'S'
-    BACK = 'B'
-    QUIT = 'Q'
+    YES = "Y"
+    NO = "N"
+    SKIP = "S"
+    BACK = "B"
+    QUIT = "Q"
 
 
 class UserPrompt:
@@ -129,11 +130,11 @@ class UserPrompt:
         self.options = [option.name.lower() for option in options]
 
     def __str__(self) -> str:
-        if 'Y' in self.valid_input:
-            output = 'Should this string be committed to the repository?'
+        if "Y" in self.valid_input:
+            output = "Should this string be committed to the repository?"
         else:
-            output = 'What would you like to do?'
+            output = "What would you like to do?"
 
-        options = ', '.join([f'({option[0]}){option[1:]}' for option in self.options])
+        options = ", ".join([f"({option[0]}){option[1:]}" for option in self.options])
 
-        return output + ' ' + options + ': '
+        return output + " " + options + ": "

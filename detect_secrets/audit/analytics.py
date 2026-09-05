@@ -2,10 +2,11 @@
 The analytics module produces a machine-readable breakdown of true and false positives
 for a given audited baseline.
 """
+
 from collections import defaultdict
 from typing import Any
-from typing import cast
 from typing import Dict
+from typing import cast
 
 from ..core.plugins.util import get_mapping_from_secret_type_to_class
 from ..core.potential_secret import PotentialSecret
@@ -15,7 +16,7 @@ from .common import get_baseline_from_file
 def calculate_statistics_for_baseline(
     filename: str,
     **kwargs: Any,
-) -> 'StatisticsAggregator':
+) -> "StatisticsAggregator":
     """
     :raises: InvalidBaselineError
     """
@@ -33,14 +34,11 @@ def calculate_statistics_for_baseline(
 class StatisticsAggregator:
     def __init__(self) -> None:
         framework = {
-            'stats': StatisticsCounter,
+            "stats": StatisticsCounter,
         }
 
         self.data: Dict[str, Any] = defaultdict(
-            lambda: {
-                key: value()
-                for key, value in framework.items()
-            },
+            lambda: {key: value() for key, value in framework.items()},
         )
 
     def record_secret(self, secret: PotentialSecret) -> None:
@@ -54,16 +52,16 @@ class StatisticsAggregator:
         else:
             counter.unknown += 1
 
-    def _get_plugin_counter(self, secret_type: str) -> 'StatisticsCounter':
-        return cast(StatisticsCounter, self.data[secret_type]['stats'])
+    def _get_plugin_counter(self, secret_type: str) -> "StatisticsCounter":
+        return cast(StatisticsCounter, self.data[secret_type]["stats"])
 
     def __str__(self) -> str:
-        output = ''
+        output = ""
 
         for secret_type, framework in self.data.items():
-            output += f'Plugin: {get_mapping_from_secret_type_to_class()[secret_type].__name__}\n'
+            output += f"Plugin: {get_mapping_from_secret_type_to_class()[secret_type].__name__}\n"
             for value in framework.values():
-                output += f'Statistics: {value}\n\n'
+                output += f"Statistics: {value}\n\n"
 
         return output
 
@@ -71,8 +69,7 @@ class StatisticsAggregator:
         output = {}
         for secret_type, framework in self.data.items():
             output[get_mapping_from_secret_type_to_class()[secret_type].__name__] = {
-                key: value.json()
-                for key, value in framework.items()
+                key: value.json() for key, value in framework.items()
             }
 
         return output
@@ -86,21 +83,21 @@ class StatisticsCounter:
 
     def __str__(self) -> str:
         return (
-            f'True Positives: {self.correct}, False Positives: {self.incorrect}, '
-            f'Unknown: {self.unknown}, Precision: {self.calculate_precision()}, '
-            f'Recall: {self.calculate_recall()}'
+            f"True Positives: {self.correct}, False Positives: {self.incorrect}, "
+            f"Unknown: {self.unknown}, Precision: {self.calculate_precision()}, "
+            f"Recall: {self.calculate_recall()}"
         )
 
     def json(self) -> Dict[str, Any]:
         return {
-            'raw': {
-                'true-positives': self.correct,
-                'false-positives': self.incorrect,
-                'unknown': self.unknown,
+            "raw": {
+                "true-positives": self.correct,
+                "false-positives": self.incorrect,
+                "unknown": self.unknown,
             },
-            'score': {
-                'precision': self.calculate_precision(),
-                'recall': self.calculate_recall(),
+            "score": {
+                "precision": self.calculate_precision(),
+                "recall": self.calculate_recall(),
             },
         }
 

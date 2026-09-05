@@ -1,18 +1,20 @@
 """
 This handles `.ini` files, or more generally known as `config` files.
 """
+
 import configparser
 import re
 from typing import Iterator
 from typing import List
 from typing import Tuple
 
+from detect_secrets.filters.allowlist import get_allowlist_regexes
+
 from ..types import NamedIO
-from ..util.filetype import determine_file_type
 from ..util.filetype import FileType
+from ..util.filetype import determine_file_type
 from .base import BaseTransformer
 from .exceptions import ParsingError
-from detect_secrets.filters.allowlist import get_allowlist_regexes
 
 
 class ConfigFileTransformer(BaseTransformer):
@@ -48,7 +50,7 @@ def _parse_file(file: NamedIO, add_header: bool = False) -> List[str]:
     lines: List[str] = []
     for key, value, line_number in IniFileParser(file, add_header=add_header):
         while len(lines) < line_number - 1:
-            lines.append('')
+            lines.append("")
 
         # Always add 'pragma: allowlist nextline secret' comments
         if _is_allowlist_nextline_secret_comment(value):
@@ -69,7 +71,6 @@ def _parse_file(file: NamedIO, add_header: bool = False) -> List[str]:
 
 
 class EfficientParsingError(configparser.ParsingError):
-
     def append(self, lineno: int, line: str) -> None:
         """
         Rather than inefficiently add all the lines in the file
@@ -80,12 +81,11 @@ class EfficientParsingError(configparser.ParsingError):
         return
 
 
-configparser.ParsingError = EfficientParsingError       # type: ignore
+configparser.ParsingError = EfficientParsingError  # type: ignore
 
 
 class IniFileParser:
-
-    _comment_regex = re.compile(r'\s*[;#]')
+    _comment_regex = re.compile(r"\s*[;#]")
 
     def __init__(self, file: NamedIO, add_header: bool = False) -> None:
         """
@@ -98,7 +98,7 @@ class IniFileParser:
         if add_header:
             # This supports environment variables, or other files that look
             # like config files, without a section header.
-            content = '[global]\n' + content
+            content = "[global]\n" + content
 
         self.parser.read_string(content)
 
@@ -145,10 +145,12 @@ class IniFileParser:
             # The IniFileParser strips out comments however it is important to
             # persist this speific comment type so filtering works properly.
             if _is_allowlist_nextline_secret_comment(line):
-                output.append((
-                    line,
-                    self.line_offset + line_offset + 1,
-                ))
+                output.append(
+                    (
+                        line,
+                        self.line_offset + line_offset + 1,
+                    )
+                )
                 continue
 
             # Check ignored lines before checking values, because
@@ -166,16 +168,18 @@ class IniFileParser:
                 # Therefore, we *only* advance the current_value_list_index when we identify
                 # the key used.
                 first_line_regex = re.compile(
-                    r'^\s*{key}[ :=]+{value}'.format(
+                    r"^\s*{key}[ :=]+{value}".format(
                         key=re.escape(key),
                         value=re.escape(values_list[current_value_list_index]),
                     ),
                 )
                 if first_line_regex.match(line):
-                    output.append((
-                        values_list[current_value_list_index],
-                        self.line_offset + line_offset + 1,
-                    ))
+                    output.append(
+                        (
+                            values_list[current_value_list_index],
+                            self.line_offset + line_offset + 1,
+                        )
+                    )
                     current_value_list_index += 1
 
                 continue
@@ -191,10 +195,12 @@ class IniFileParser:
                 break
 
             # This handles all other cases, when it isn't an empty or blank line.
-            output.append((
-                values_list[current_value_list_index],
-                self.line_offset + line_offset + 1,
-            ))
+            output.append(
+                (
+                    values_list[current_value_list_index],
+                    self.line_offset + line_offset + 1,
+                )
+            )
             current_value_list_index += 1
         else:
             self.lines = []
@@ -234,7 +240,7 @@ def _construct_values_list(values: str) -> List[str]:
 
 def _is_allowlist_nextline_secret_comment(line: str) -> bool:
     # Valid tuples for config file comments (start_char, end_char)
-    comment_tuple = [('#', ''), (';', '')]
+    comment_tuple = [("#", ""), (";", "")]
 
     for t in comment_tuple:
         if get_allowlist_regexes(comment_tuple=t, nextline=True).search(line):

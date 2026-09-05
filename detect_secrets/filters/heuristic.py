@@ -12,33 +12,18 @@ from detect_secrets.plugins.base import RegexBasedDetector
 def is_sequential_string(secret: str) -> bool:
     sequences = (
         # Base64 letters first
-        (
-            string.ascii_uppercase +
-            string.ascii_uppercase +
-            string.digits +
-            '+/'
-        ),
-
+        (string.ascii_uppercase + string.ascii_uppercase + string.digits + "+/"),
         # Base64 numbers first
-        (
-            string.digits +
-            string.ascii_uppercase +
-            string.ascii_uppercase +
-            '+/'
-        ),
-
+        (string.digits + string.ascii_uppercase + string.ascii_uppercase + "+/"),
         # We don't have a specific sequence for alphabetical
         # sequences, since those will happen to be caught by the
         # base64 checks.
-
         # Alphanumeric sequences
         (string.digits + string.ascii_uppercase) * 2,
-
         # Capturing any number sequences
         string.digits * 2,
-
         string.hexdigits.upper() + string.hexdigits.upper(),
-        string.ascii_uppercase + '=/',
+        string.ascii_uppercase + "=/",
     )
 
     uppercase = secret.upper()
@@ -56,7 +41,7 @@ def is_potential_uuid(secret: str) -> bool:
 @lru_cache(maxsize=1)
 def _get_uuid_regex() -> Pattern:
     return re.compile(
-        r'[a-f0-9]{8}\-[a-f0-9]{4}\-[a-f0-9]{4}\-[a-f0-9]{4}\-[a-f0-9]{12}',
+        r"[a-f0-9]{8}\-[a-f0-9]{4}\-[a-f0-9]{4}\-[a-f0-9]{4}\-[a-f0-9]{12}",
         re.IGNORECASE,
     )
 
@@ -67,8 +52,9 @@ def is_likely_id_string(secret: str, line: str, plugin: Optional[BasePlugin] = N
     except ValueError:
         return False
 
-    return (not plugin or not isinstance(plugin, RegexBasedDetector)) \
-        and bool(_get_id_detector_regex().search(line, pos=0, endpos=index))
+    return (not plugin or not isinstance(plugin, RegexBasedDetector)) and bool(
+        _get_id_detector_regex().search(line, pos=0, endpos=index)
+    )
 
 
 @lru_cache(maxsize=1)
@@ -80,7 +66,7 @@ def _get_id_detector_regex() -> Pattern:
     s?                -> Optional plural id identifier
     [^a-z0-9]         -> Non-letter/numeric character
     """
-    return re.compile(r'(^(id|myid|userid)|_id)s?[^a-z0-9]', re.IGNORECASE)
+    return re.compile(r"(^(id|myid|userid)|_id)s?[^a-z0-9]", re.IGNORECASE)
 
 
 def is_non_text_file(filename: str) -> bool:
@@ -96,46 +82,46 @@ def is_non_text_file(filename: str) -> bool:
 #       Definitely something to look into, if this list gets unruly long.
 IGNORED_FILE_EXTENSIONS = set(
     (
-        '.7z',
-        '.bin',
-        '.bmp',
-        '.bz2',
-        '.class',
-        '.css',
-        '.dmg',
-        '.doc',
-        '.eot',
-        '.exe',
-        '.gif',
-        '.gz',
-        '.ico',
-        '.iml',
-        '.ipr',
-        '.iws',
-        '.jar',
-        '.jpg',
-        '.jpeg',
-        '.lock',
-        '.map',
-        '.mo',
-        '.pdf',
-        '.png',
-        '.prefs',
-        '.psd',
-        '.rar',
-        '.realm',
-        '.s7z',
-        '.sum',
-        '.svg',
-        '.tar',
-        '.tif',
-        '.tiff',
-        '.ttf',
-        '.webp',
-        '.woff',
-        '.xls',
-        '.xlsx',
-        '.zip',
+        ".7z",
+        ".bin",
+        ".bmp",
+        ".bz2",
+        ".class",
+        ".css",
+        ".dmg",
+        ".doc",
+        ".eot",
+        ".exe",
+        ".gif",
+        ".gz",
+        ".ico",
+        ".iml",
+        ".ipr",
+        ".iws",
+        ".jar",
+        ".jpg",
+        ".jpeg",
+        ".lock",
+        ".map",
+        ".mo",
+        ".pdf",
+        ".png",
+        ".prefs",
+        ".psd",
+        ".rar",
+        ".realm",
+        ".s7z",
+        ".sum",
+        ".svg",
+        ".tar",
+        ".tif",
+        ".tiff",
+        ".ttf",
+        ".webp",
+        ".woff",
+        ".xls",
+        ".xlsx",
+        ".zip",
     ),
 )
 
@@ -146,9 +132,9 @@ def is_templated_secret(secret: str) -> bool:
     """
     try:
         if (
-            (secret[0] == '{' and secret[-1] == '}')
-            or (secret[0] == '<' and secret[-1] == '>')
-            or (secret[0] == '$' and secret[1] == '{' and secret[-1] == '}')
+            (secret[0] == "{" and secret[-1] == "}")
+            or (secret[0] == "<" and secret[-1] == ">")
+            or (secret[0] == "$" and secret[1] == "{" and secret[-1] == "}")
         ):
             return True
     except IndexError:
@@ -164,7 +150,7 @@ def is_prefixed_with_dollar_sign(secret: str) -> bool:
     # false negatives than `is_templated_secret` (e.g. secrets that actually start with a $).
     # This is best used with files that actually use this as a means of referencing variables.
     # TODO: More intelligent filetype handling?
-    return bool(secret) and secret[0] == '$'
+    return bool(secret) and secret[0] == "$"
 
 
 def is_indirect_reference(line: str) -> bool:
@@ -197,23 +183,23 @@ def _get_indirect_reference_regex() -> Pattern:
     #       [^\v]*      ->  Something except line breaks
     #       [\]\)]      ->  End of indirect reference: ] or )
     #   )
-    return re.compile(r'([^\v=!:]*)\s*(:=?|[!=]{1,3})\s*([\w.-]+[\[\(][^\v]*[\]\)])')
+    return re.compile(r"([^\v=!:]*)\s*(:=?|[!=]{1,3})\s*([\w.-]+[\[\(][^\v]*[\]\)])")
 
 
 def is_lock_file(filename: str) -> bool:
     return os.path.basename(filename) in {
-        'Brewfile.lock.json',
-        'Cartfile.resolved',
-        'composer.lock',
-        'Gemfile.lock',
-        'Package.resolved',
-        'package-lock.json',
-        'Podfile.lock',
-        'yarn.lock',
-        'Pipfile.lock',
-        'poetry.lock',
-        'Cargo.lock',
-        'packages.lock.json',
+        "Brewfile.lock.json",
+        "Cartfile.resolved",
+        "composer.lock",
+        "Gemfile.lock",
+        "Package.resolved",
+        "package-lock.json",
+        "Podfile.lock",
+        "yarn.lock",
+        "Pipfile.lock",
+        "poetry.lock",
+        "Cargo.lock",
+        "packages.lock.json",
     }
 
 
@@ -234,4 +220,4 @@ def is_swagger_file(filename: str) -> bool:
 
 @lru_cache(maxsize=1)
 def _get_swagger_regex() -> Pattern:
-    return re.compile(r'.*swagger.*')
+    return re.compile(r".*swagger.*")

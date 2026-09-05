@@ -1,16 +1,17 @@
 from typing import Generator
 from typing import List
 
+from detect_secrets.exceptions import SecretNotFoundOnSpecifiedLineError
+
 from .color import AnsiColor
 from .color import colorize
-from detect_secrets.exceptions import SecretNotFoundOnSpecifiedLineError
 
 
 def get_code_snippet(
     lines: List[str],
     line_number: int,
     lines_of_context: int = 5,
-) -> 'CodeSnippet':
+) -> "CodeSnippet":
     """
     :param lines: an iterator of lines in the file
     :param line_number: line which you want to focus on
@@ -34,7 +35,6 @@ def get_code_snippet(
 
 
 class CodeSnippet:
-
     def __init__(self, snippet: List[str], start_line: int, target_index: int) -> None:
         """
         :param snippet: lines of code extracted from file
@@ -56,19 +56,19 @@ class CodeSnippet:
     @property
     def previous_line(self) -> str:
         if self.target_index == 0 or len(self.lines) < self.target_index:
-            return ''
+            return ""
         return self.lines[self.target_index - 1]
 
-    def add_line_numbers(self) -> 'CodeSnippet':
+    def add_line_numbers(self) -> "CodeSnippet":
         for index, line in enumerate(self.lines):
-            self.lines[index] = u'{}:{}'.format(
+            self.lines[index] = "{}:{}".format(
                 self.get_line_number(self.start_line + index + 1),
                 line,
             )
 
         return self
 
-    def highlight_line(self, payload: str) -> 'CodeSnippet':
+    def highlight_line(self, payload: str) -> "CodeSnippet":
         """
         :param payload: string to highlight, on chosen line
         """
@@ -76,7 +76,7 @@ class CodeSnippet:
             index_of_payload = self.target_line.lower().index(payload.lower())
             end_of_payload = index_of_payload + len(payload)
 
-            self.target_line = u'{}{}{}'.format(
+            self.target_line = "{}{}{}".format(
                 self.target_line[:index_of_payload],
                 self.apply_highlight(self.target_line[index_of_payload:end_of_payload]),
                 self.target_line[end_of_payload:],
@@ -95,7 +95,7 @@ class CodeSnippet:
         return colorize(payload, AnsiColor.RED_BACKGROUND)
 
     def __str__(self) -> str:
-        return '\n'.join(self.lines)
+        return "\n".join(self.lines)
 
     def __iter__(self) -> Generator[str, None, None]:
         yield from self.lines

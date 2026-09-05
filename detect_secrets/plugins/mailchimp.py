@@ -1,6 +1,7 @@
 """
 This plugin searches for Mailchimp keys
 """
+
 import re
 from base64 import b64encode
 
@@ -12,22 +13,22 @@ from .base import RegexBasedDetector
 
 class MailchimpDetector(RegexBasedDetector):
     """Scans for Mailchimp keys."""
-    secret_type = 'Mailchimp Access Key'
 
-    denylist = (
-        re.compile(r'[0-9a-z]{32}-us[0-9]{1,2}'),
-    )
+    secret_type = "Mailchimp Access Key"
+
+    denylist = (re.compile(r"[0-9a-z]{32}-us[0-9]{1,2}"),)
 
     def verify(self, secret: str) -> VerifiedResult:  # pragma: no cover
-        _, datacenter_number = secret.split('-us')
+        _, datacenter_number = secret.split("-us")
 
         response = requests.get(
-            'https://us{}.api.mailchimp.com/3.0/'.format(
+            "https://us{}.api.mailchimp.com/3.0/".format(
                 datacenter_number,
             ),
             headers={
-                'Authorization': b'Basic ' + b64encode(
-                    'any_user:{}'.format(secret).encode('utf-8'),
+                "Authorization": b"Basic "
+                + b64encode(
+                    "any_user:{}".format(secret).encode("utf-8"),
                 ),
             },
         )

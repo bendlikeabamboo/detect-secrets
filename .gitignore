@@ -4,8 +4,9 @@
 
 /.coverage
 /.pytest_cache
-/.tox
-/venv*
+/.ruff_cache
+/.venv
+/dist
 /tmp
 
 .*ignore

@@ -4,7 +4,6 @@ from detect_secrets.audit.iterator import BidirectionalIterator
 
 
 class TestBidirectionalIterator:
-
     def test_no_input(self):
         iterator = BidirectionalIterator([])
         with pytest.raises(StopIteration):

@@ -15,6 +15,7 @@ NOTE: We don't want to do a version check, because we want to be able to
 use this functionality across versions (to see how the new version fares
 compared to the old one).
 """
+
 from typing import Any
 from typing import Dict
 from typing import Iterator
@@ -23,7 +24,6 @@ from typing import Tuple
 from typing import Type
 from typing import Union
 
-from . import io
 from ..core import baseline
 from ..core.potential_secret import PotentialSecret
 from ..core.secrets_collection import SecretsCollection
@@ -34,6 +34,7 @@ from ..types import SecretContext
 from ..util.code_snippet import get_code_snippet
 from ..util.color import AnsiColor
 from ..util.color import colorize
+from . import io
 from .common import get_raw_secret_from_file
 from .common import open_file
 from .iterator import BidirectionalIterator
@@ -41,7 +42,7 @@ from .iterator import BidirectionalIterator
 
 def compare_baselines(old_baseline_filename: str, new_baseline_filename: str) -> None:
     if old_baseline_filename == new_baseline_filename:
-        io.print_error('This is the same file!')
+        io.print_error("This is the same file!")
         return
 
     old_baseline, old_config = _get_baseline_from_file(old_baseline_filename)
@@ -60,8 +61,8 @@ def compare_baselines(old_baseline_filename: str, new_baseline_filename: str) ->
 def _get_baseline_from_file(filename: str) -> Tuple[SecretsCollection, Dict[str, Any]]:
     data = baseline.upgrade(baseline.load_from_file(filename))
     config = {
-        'plugins_used': data['plugins_used'],
-        'filters_used': [] if 'filters_used' not in data else data['filters_used'],
+        "plugins_used": data["plugins_used"],
+        "filters_used": [] if "filters_used" not in data else data["filters_used"],
     }
 
     return baseline.load(data, filename), config
@@ -77,6 +78,7 @@ def _compare_baselines(
         if `left_secret` is None, then it's a newly added secret;
         if `right_secret` is None, then it's a deleted secret
     """
+
     class LeftSecret(Exception):
         pass
 
@@ -187,12 +189,12 @@ def _display_difference_to_user(
                 current_index=iterator.index + 1,
                 num_total_secrets=len(iterator.collection),
                 secret=secret,
-                header='{status}      {value}'.format(
-                    status=colorize('Status:', AnsiColor.BOLD),
-                    value='>> {} <<'.format(
-                        colorize('REMOVED', AnsiColor.RED)
+                header="{status}      {value}".format(
+                    status=colorize("Status:", AnsiColor.BOLD),
+                    value=">> {} <<".format(
+                        colorize("REMOVED", AnsiColor.RED)
                         if not right_secret
-                        else colorize('ADDED', AnsiColor.LIGHT_GREEN),
+                        else colorize("ADDED", AnsiColor.LIGHT_GREEN),
                     ),
                 ),
                 snippet=get_code_snippet(
@@ -222,7 +224,7 @@ def _display_difference_to_user(
             )
 
         if decision == io.InputOptions.QUIT:
-            io.print_message('Quitting...')
+            io.print_message("Quitting...")
             break
         elif decision == io.InputOptions.BACK:
             iterator.step_back_on_next_iteration()

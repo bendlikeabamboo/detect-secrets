@@ -1,9 +1,9 @@
 import inspect
 from typing import Any
 from typing import Callable
-from typing import cast
 from typing import Tuple
 from typing import Union
+from typing import cast
 
 from ..types import SelfAwareCallable
 
@@ -30,10 +30,7 @@ def call_function_with_arguments(
         kwargs[get_injectable_variables(func)[0]] = func.__self__
 
     variables_to_inject = set(kwargs.keys())
-    values = {
-        key: kwargs[key]
-        for key in (variables_to_inject & function.injectable_variables)
-    }
+    values = {key: kwargs[key] for key in (variables_to_inject & function.injectable_variables)}
 
     return function(**values)
 
@@ -43,7 +40,7 @@ def make_function_self_aware(func: Callable) -> SelfAwareCallable:
     A SelfAwareCallable is one that is aware of its own injectable variables, through the
     `func.injectable_variables` attribute.
     """
-    if hasattr(func, 'injectable_variables'):
+    if hasattr(func, "injectable_variables"):
         return cast(SelfAwareCallable, func)
 
     # We can't add arbitrary attributes to methods, but we can to functions. Therefore,
@@ -53,10 +50,10 @@ def make_function_self_aware(func: Callable) -> SelfAwareCallable:
         function = getattr(klass, func.__name__)
         function.injectable_variables = set(get_injectable_variables(func))
 
-        function.path = f'{klass}.{func.__name__}'
+        function.path = f"{klass}.{func.__name__}"
     else:
-        function = func
-        function.path = func.__name__
+        function = cast(SelfAwareCallable, func)
+        function.path = cast(str, getattr(func, "__name__"))
 
     return cast(SelfAwareCallable, function)
 
@@ -74,7 +71,8 @@ def get_injectable_variables(func: Callable) -> Tuple[str, ...]:
         >>> print(func.__code__.co_kwonlyargcount)  # `c` and `d`
         2
     """
-    variable_names = func.__code__.co_varnames
-    arg_count = func.__code__.co_argcount + func.__code__.co_kwonlyargcount
+    code = getattr(func, "__code__")
+    variable_names = code.co_varnames
+    arg_count = code.co_argcount + code.co_kwonlyargcount
 
     return variable_names[:arg_count]

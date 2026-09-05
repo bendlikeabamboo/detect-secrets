@@ -5,28 +5,31 @@ In most cases, you probably can just use the RegexBasedPlugin. In more advanced 
 you can also use the LineBasedPlugin, and FileBasedPlugin. If you're extending the BasePlugin,
 things may not work as you expect (see the scan logic in SecretsCollection).
 """
+
 import re
 from abc import ABCMeta
 from abc import abstractmethod
-from abc import abstractproperty
 from typing import Any
 from typing import Dict
 from typing import Generator
 from typing import Iterable
+from typing import Optional
 from typing import Pattern
 from typing import Set
 
 import requests
 
-from ..constants import VerifiedResult
-from ..core.potential_secret import PotentialSecret
-from ..settings import get_settings
 from detect_secrets.util.code_snippet import CodeSnippet
 from detect_secrets.util.inject import call_function_with_arguments
 
+from ..constants import VerifiedResult
+from ..core.potential_secret import PotentialSecret
+from ..settings import get_settings
+
 
 class BasePlugin(metaclass=ABCMeta):
-    @abstractproperty
+    @property
+    @abstractmethod
     def secret_type(self) -> str:
         """
         Unique, user-facing description to identify this type of secret. This should be overloaded
@@ -48,8 +51,8 @@ class BasePlugin(metaclass=ABCMeta):
         filename: str,
         line: str,
         line_number: int = 0,
-        context: CodeSnippet = None,
-        **kwargs: Any
+        context: Optional[CodeSnippet] = None,
+        **kwargs: Any,
     ) -> Set[PotentialSecret]:
         """This examines a line and finds all possible secret values in it."""
         output = set()
@@ -58,7 +61,7 @@ class BasePlugin(metaclass=ABCMeta):
             # If the filter is disabled it means --no-verify flag was passed
             # We won't run verification in that case
             if (
-                'detect_secrets.filters.common.is_ignored_due_to_verification_policies'
+                "detect_secrets.filters.common.is_ignored_due_to_verification_policies"
                 in get_settings().filters
             ):
                 try:
@@ -88,33 +91,33 @@ class BasePlugin(metaclass=ABCMeta):
 
     def json(self) -> Dict[str, Any]:
         return {
-            'name': self.__class__.__name__,
+            "name": self.__class__.__name__,
         }
 
     def format_scan_result(self, secret: PotentialSecret) -> str:
         try:
             verification_level = VerifiedResult(
                 get_settings().filters[
-                    'detect_secrets.filters.common.is_ignored_due_to_verification_policies'
-                ]['min_level'],
+                    "detect_secrets.filters.common.is_ignored_due_to_verification_policies"
+                ]["min_level"],
             )
         except KeyError:
             verification_level = VerifiedResult.VERIFIED_FALSE
 
         if verification_level == VerifiedResult.VERIFIED_FALSE:
             # This is a secret, but we can't verify it. So this is the best we can do.
-            return 'True'
+            return "True"
 
         if not secret.secret_value and not secret.is_verified:
             # If the secret isn't verified, but we don't know the true secret value, this
             # is also the best we can do.
-            return 'True  (unverified)'
+            return "True  (unverified)"
 
         if not secret.is_verified:
             try:
                 # NOTE: There is no context here, since in this frame, we're only aware of the
                 # secret itself.
-                verified_result = self.verify(secret.secret_value)      # type: ignore
+                verified_result = self.verify(secret.secret_value)  # type: ignore
             except (requests.exceptions.RequestException, TypeError):
                 # NOTE: A TypeError is raised when the function expects a `context` to be supplied.
                 # However, if this function is run through a context-less situation (e.g. adhoc
@@ -128,14 +131,12 @@ class BasePlugin(metaclass=ABCMeta):
 
         return {
             # This will only occur if the verification process happens in this formatting step.
-            VerifiedResult.VERIFIED_FALSE: 'False (verified)',
-
+            VerifiedResult.VERIFIED_FALSE: "False (verified)",
             # This occurs either if we've already known the secret is verified, or that the
             # verification process that just occurred proved it valid.
-            VerifiedResult.VERIFIED_TRUE: 'True  (verified)',
-
+            VerifiedResult.VERIFIED_TRUE: "True  (verified)",
             # Sometimes, the plugin may not have defined a verification process.
-            VerifiedResult.UNVERIFIED: 'True  (unverified)',
+            VerifiedResult.UNVERIFIED: "True  (unverified)",
         }[verified_result]
 
     def __eq__(self, other: Any) -> bool:
@@ -159,7 +160,9 @@ class RegexBasedDetector(BasePlugin, metaclass=ABCMeta):
             re.compile(r'foo'),
         )
     """
-    @abstractproperty
+
+    @property
+    @abstractmethod
     def denylist(self) -> Iterable[Pattern]:
         raise NotImplementedError
 
@@ -186,17 +189,17 @@ class RegexBasedDetector(BasePlugin, metaclass=ABCMeta):
         assignment would include =,:,:=,::
         keyname and value supports optional quotes
         """
-        begin = r'(?:(?<=\W)|(?<=^))'
+        begin = r"(?:(?<=\W)|(?<=^))"
         opt_quote = r'(?:"|\'|)'
-        opt_open_square_bracket = r'(?:\[|)'
-        opt_close_square_bracket = r'(?:\]|)'
-        opt_dash_underscore = r'(?:_|-|)'
-        opt_space = r'(?: *)'
-        assignment = r'(?:=|:|:=|=>| +|::)'
+        opt_open_square_bracket = r"(?:\[|)"
+        opt_close_square_bracket = r"(?:\]|)"
+        opt_dash_underscore = r"(?:_|-|)"
+        opt_space = r"(?: *)"
+        assignment = r"(?:=|:|:=|=>| +|::)"
         return re.compile(
-            r'{begin}{opt_open_square_bracket}{opt_quote}{prefix_regex}{opt_dash_underscore}'
-            '{secret_keyword_regex}{opt_quote}{opt_close_square_bracket}{opt_space}'
-            '{assignment}{opt_space}{opt_quote}{secret_regex}{opt_quote}'.format(
+            r"{begin}{opt_open_square_bracket}{opt_quote}{prefix_regex}{opt_dash_underscore}"
+            "{secret_keyword_regex}{opt_quote}{opt_close_square_bracket}{opt_space}"
+            "{assignment}{opt_space}{opt_quote}{secret_regex}{opt_quote}".format(
                 begin=begin,
                 opt_open_square_bracket=opt_open_square_bracket,
                 opt_quote=opt_quote,
@@ -207,5 +210,6 @@ class RegexBasedDetector(BasePlugin, metaclass=ABCMeta):
                 opt_space=opt_space,
                 assignment=assignment,
                 secret_regex=secret_regex,
-            ), flags=re.IGNORECASE,
+            ),
+            flags=re.IGNORECASE,
         )

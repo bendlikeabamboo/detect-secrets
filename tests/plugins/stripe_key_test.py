@@ -4,24 +4,23 @@ from detect_secrets.plugins.stripe import StripeDetector
 
 
 class TestStripeKeyDetector:
-
     @pytest.mark.parametrize(
-        'line,should_flag',
+        "line,should_flag",
         [
             (
-                'sk_live_ReTllpYQYfIZu2Jnf2lAPFjD',
+                "sk_live_ReTllpYQYfIZu2Jnf2lAPFjD",
                 True,
             ),
             (
-                'rk_live_5TcWfjKmJgpql9hjpRnwRXbT',
+                "rk_live_5TcWfjKmJgpql9hjpRnwRXbT",
                 True,
             ),
             (
-                'pk_live_j5krY8XTgIcDaHDb3YrsAfCl',
+                "pk_live_j5krY8XTgIcDaHDb3YrsAfCl",
                 False,
             ),
             (
-                'sk_live_',
+                "sk_live_",
                 False,
             ),
         ],
@@ -29,5 +28,5 @@ class TestStripeKeyDetector:
     def test_analyze(self, line, should_flag):
         logic = StripeDetector()
 
-        output = logic.analyze_line(filename='mock_filename', line=line)
+        output = logic.analyze_line(filename="mock_filename", line=line)
         assert len(output) == (1 if should_flag else 0)

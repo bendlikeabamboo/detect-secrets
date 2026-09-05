@@ -2,12 +2,13 @@ import json
 from contextlib import contextmanager
 from functools import lru_cache
 from typing import Callable
-from typing import cast
 from typing import Iterator
 from typing import List
 from typing import Optional
+from typing import cast
 
-from . import io
+from detect_secrets.util.code_snippet import get_code_snippet
+
 from ..core import baseline
 from ..core import plugins
 from ..core.potential_secret import PotentialSecret
@@ -19,7 +20,7 @@ from ..plugins.base import BasePlugin
 from ..transformers import get_transformed_file
 from ..types import NamedIO
 from ..util.inject import call_function_with_arguments
-from detect_secrets.util.code_snippet import get_code_snippet
+from . import io
 
 
 def get_baseline_from_file(filename: str) -> SecretsCollection:
@@ -30,21 +31,21 @@ def get_baseline_from_file(filename: str) -> SecretsCollection:
         # TODO: Should we upgrade this?
         return baseline.load(baseline.load_from_file(filename), filename)
     except (IOError, json.decoder.JSONDecodeError):
-        io.print_error('Not a valid baseline file!')
+        io.print_error("Not a valid baseline file!")
         raise InvalidBaselineError
     except KeyError:
-        io.print_error('Not a valid baseline file!')
+        io.print_error("Not a valid baseline file!")
         raise InvalidBaselineError
 
 
 @lru_cache(maxsize=1)
-def open_file(filename: str) -> 'LineGetter':
+def open_file(filename: str) -> "LineGetter":
     return LineGetter(filename)
 
 
 def get_raw_secret_from_file(
     secret: PotentialSecret,
-    line_getter_factory: Callable[[str], 'LineGetter'] = open_file,
+    line_getter_factory: Callable[[str], "LineGetter"] = open_file,
 ) -> Optional[str]:
     """
     We're analyzing the contents straight from the baseline, and therefore, we don't know
@@ -65,7 +66,7 @@ def get_raw_secret_from_file(
 
 def get_raw_secrets_from_file(
     secret: PotentialSecret,
-    line_getter_factory: Callable[[str], 'LineGetter'] = open_file,
+    line_getter_factory: Callable[[str], "LineGetter"] = open_file,
 ) -> List[PotentialSecret]:
     """
     We're analyzing the contents straight from the baseline, and therefore, we don't know
@@ -98,21 +99,20 @@ def get_raw_secrets_from_file(
                 filename=secret.filename,
                 line=line,
                 line_number=line_number + 1,
-
                 # We enable eager search, because we *know* there's a secret here -- the baseline
                 # flagged it after all.
                 enable_eager_search=bool(secret.line_number),
                 context=context,
             )
 
-            for identified_secret in (identified_secrets or []):
+            for identified_secret in identified_secrets or []:
                 if identified_secret == secret:
                     all_secrets.append(identified_secret)
 
         if (
-            len(all_secrets) == 0 and
-            is_first_time_opening_file and
-            not line_getter.use_eager_transformers
+            len(all_secrets) == 0
+            and is_first_time_opening_file
+            and not line_getter.use_eager_transformers
         ):
             line_getter.use_eager_transformers = True
         else:
@@ -186,4 +186,4 @@ class LineGetter:
             return
 
         self._use_eager_transformers = status
-        self._lines = None              # invalidate cache
+        self._lines = None  # invalidate cache

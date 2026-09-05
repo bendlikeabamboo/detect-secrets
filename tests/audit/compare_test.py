@@ -27,14 +27,14 @@ def potential_secret_factory(secret: str, **kwargs):
 
 
 def test_comparing_same_file(printer):
-    main(['audit', '--diff', '.secrets.baseline', '.secrets.baseline'])
+    main(["audit", "--diff", ".secrets.baseline", ".secrets.baseline"])
 
-    assert printer.message.strip() == 'This is the same file!'
+    assert printer.message.strip() == "This is the same file!"
 
 
 def test_same_secrets_are_skipped(mock_user_decision):
-    baselineA = get_secrets(potential_secret_factory('a'))
-    baselineB = get_secrets(potential_secret_factory('a'))
+    baselineA = get_secrets(potential_secret_factory("a"))
+    baselineB = get_secrets(potential_secret_factory("a"))
 
     with allow_fake_files():
         run_logic(baselineA, baselineB)
@@ -43,52 +43,49 @@ def test_same_secrets_are_skipped(mock_user_decision):
 
 
 @pytest.mark.parametrize(
-    'secretsA, secretsB, expected_order',
+    "secretsA, secretsB, expected_order",
     (
         # No secrets in one.
         (
             [],
             [
-                potential_secret_factory('a'),
-                potential_secret_factory('b'),
+                potential_secret_factory("a"),
+                potential_secret_factory("b"),
             ],
-            'RR',
+            "RR",
         ),
         (
             [
-                potential_secret_factory('a'),
+                potential_secret_factory("a"),
             ],
             [],
-            'L',
+            "L",
         ),
-
         # Finish a file, before proceeding
         (
             [
-                potential_secret_factory('a', filename='b'),
-                potential_secret_factory('a', filename='a'),
-                potential_secret_factory('b', filename='a'),
-                potential_secret_factory('c', filename='a'),
+                potential_secret_factory("a", filename="b"),
+                potential_secret_factory("a", filename="a"),
+                potential_secret_factory("b", filename="a"),
+                potential_secret_factory("c", filename="a"),
             ],
             [
-                potential_secret_factory('b', filename='a'),
-                potential_secret_factory('a', filename='b'),
-                potential_secret_factory('b', filename='b'),
+                potential_secret_factory("b", filename="a"),
+                potential_secret_factory("a", filename="b"),
+                potential_secret_factory("b", filename="b"),
             ],
-
             # We should have removed `a`, `c` and then added `e`
-            'LLR',
+            "LLR",
         ),
-
         # Show in line order
         (
             [
-                potential_secret_factory('a', line_number=4),
+                potential_secret_factory("a", line_number=4),
             ],
             [
-                potential_secret_factory('a', line_number=2),
+                potential_secret_factory("a", line_number=2),
             ],
-            'RL',
+            "RL",
         ),
     ),
 )
@@ -107,35 +104,35 @@ def test_order(printer, secretsA, secretsB, expected_order):
 def parse_ordering(printer) -> str:
     output = []
 
-    regex = re.compile(r'>> ([\w]+) <<')
+    regex = re.compile(r">> ([\w]+) <<")
     for entry in regex.findall(printer.message):
-        if entry == 'ADDED':
-            output.append('R')
-        elif entry == 'REMOVED':
-            output.append('L')
+        if entry == "ADDED":
+            output.append("R")
+        elif entry == "REMOVED":
+            output.append("L")
 
-    return ''.join(output)
+    return "".join(output)
 
 
 def test_file_no_longer_exists(printer, mock_user_decision):
     secretsA = SecretsCollection()
-    secretsA['fileB'].add(potential_secret_factory('a'))
+    secretsA["fileB"].add(potential_secret_factory("a"))
 
     secretsB = SecretsCollection()
-    secretsB['fileA'].add(potential_secret_factory('a'))
+    secretsB["fileA"].add(potential_secret_factory("a"))
 
     run_logic(secretsA, secretsB)
     assert not mock_user_decision.called
 
 
 def test_fails_when_no_line_number(printer):
-    secretsA = get_secrets(potential_secret_factory('a', line_number=0))
-    secretsB = get_secrets(potential_secret_factory('b'))
+    secretsA = get_secrets(potential_secret_factory("a", line_number=0))
+    secretsB = get_secrets(potential_secret_factory("b"))
 
     with allow_fake_files():
         run_logic(secretsA, secretsB)
 
-    assert 'ERROR: No line numbers found' in printer.message
+    assert "ERROR: No line numbers found" in printer.message
 
 
 def run_logic(secretsA: SecretsCollection, secretsB: SecretsCollection):
@@ -143,7 +140,7 @@ def run_logic(secretsA: SecretsCollection, secretsB: SecretsCollection):
         baseline.save_to_file(secretsA, f.name)
         baseline.save_to_file(secretsB, g.name)
 
-        main(['audit', '--diff', f.name, g.name])
+        main(["audit", "--diff", f.name, g.name])
 
 
 def get_secrets(*secrets) -> SecretsCollection:
@@ -156,16 +153,21 @@ def get_secrets(*secrets) -> SecretsCollection:
 
 @contextmanager
 def allow_fake_files():
-    with mock.patch(
-        'detect_secrets.core.secrets_collection.os.path.exists',
-        return_value=True,
-    ), mock.patch(
-        'detect_secrets.audit.compare.open_file',
-    ), mock.patch(
-        'detect_secrets.audit.compare.get_code_snippet',
-    ), mock.patch(
-        'detect_secrets.audit.compare.get_raw_secret_from_file',
-        return_value='does not matter',
+    with (
+        mock.patch(
+            "detect_secrets.core.secrets_collection.os.path.exists",
+            return_value=True,
+        ),
+        mock.patch(
+            "detect_secrets.audit.compare.open_file",
+        ),
+        mock.patch(
+            "detect_secrets.audit.compare.get_code_snippet",
+        ),
+        mock.patch(
+            "detect_secrets.audit.compare.get_raw_secret_from_file",
+            return_value="does not matter",
+        ),
     ):
         yield
 
@@ -174,7 +176,7 @@ def allow_fake_files():
 def mock_user_decision():
     # Always skip, to get to the end.
     with mock.patch(
-        'detect_secrets.audit.compare.io.get_user_decision',
+        "detect_secrets.audit.compare.io.get_user_decision",
         return_value=InputOptions.SKIP,
     ) as m:
         yield m

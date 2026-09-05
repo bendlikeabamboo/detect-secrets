@@ -16,6 +16,7 @@ class BaseTransformer(metaclass=ABCMeta):
         1. The secret value
         2. The specific line that it's found on (for auditing purposes)
     """
+
     @property
     def is_eager(self) -> bool:
         """

@@ -9,23 +9,25 @@ from typing import Optional
 from typing import Set
 from typing import Tuple
 
-from . import scan
-from ..util.path import convert_local_os_path
-from .potential_secret import PotentialSecret
 from detect_secrets.settings import configure_settings_from_baseline
 from detect_secrets.settings import get_settings
+
+from ..util.path import convert_local_os_path
+from . import scan
+from .potential_secret import PotentialSecret
 
 
 class PatchedFile:
     """This exists so that we can do typecasting, without importing unidiff."""
+
     path: str
 
     def __iter__(self) -> Generator:
-        pass
+        yield
 
 
 class SecretsCollection:
-    def __init__(self, root: str = '') -> None:
+    def __init__(self, root: str = "") -> None:
         """
         :param root: if specified, will scan as if the root was the value provided,
             rather than the current working directory. We still store results as if
@@ -36,11 +38,11 @@ class SecretsCollection:
         self.root = root
 
     @classmethod
-    def load_from_baseline(cls, baseline: Dict[str, Any]) -> 'SecretsCollection':
+    def load_from_baseline(cls, baseline: Dict[str, Any]) -> "SecretsCollection":
         output = cls()
-        for filename in baseline['results']:
-            for item in baseline['results'][filename]:
-                secret = PotentialSecret.load_secret_from_dict({'filename': filename, **item})
+        for filename in baseline["results"]:
+            for item in baseline["results"][filename]:
+                secret = PotentialSecret.load_secret_from_dict({"filename": filename, **item})
                 output[convert_local_os_path(filename)].add(secret)
 
         return output
@@ -83,13 +85,13 @@ class SecretsCollection:
         try:
             for secret in scan.scan_diff(diff):
                 self[secret.filename].add(secret)
-        except ImportError:     # pragma: no cover
+        except ImportError:  # pragma: no cover
             raise NotImplementedError(
-                'SecretsCollection.scan_diff requires `unidiff` to work. Try pip '
-                'installing that package, and try again.',
+                "SecretsCollection.scan_diff requires `unidiff` to work. Try pip "
+                "installing that package, and try again.",
             )
 
-    def merge(self, old_results: 'SecretsCollection') -> None:
+    def merge(self, old_results: "SecretsCollection") -> None:
         """
         We operate under an assumption that the latest results are always more accurate,
         assuming that the baseline is created on the same repository. However, we cannot
@@ -104,10 +106,7 @@ class SecretsCollection:
                 continue
 
             # This allows us to obtain the same secret, by accessing the hash.
-            mapping = {
-                secret: secret
-                for secret in self.data[filename]
-            }
+            mapping = {secret: secret for secret in self.data[filename]}
 
             for old_secret in old_results.data[filename]:
                 if old_secret not in mapping:
@@ -123,7 +122,7 @@ class SecretsCollection:
 
     def trim(
         self,
-        scanned_results: Optional['SecretsCollection'] = None,
+        scanned_results: Optional["SecretsCollection"] = None,
         filelist: Optional[List[str]] = None,
     ) -> None:
         """
@@ -149,11 +148,7 @@ class SecretsCollection:
         """
         if scanned_results is None:
             scanned_results = SecretsCollection()
-            filelist = [
-                filename
-                for filename in self.files
-                if not os.path.exists(filename)
-            ]
+            filelist = [filename for filename in self.files if not os.path.exists(filename)]
 
         if not filelist:
             fileset = set()
@@ -210,7 +205,7 @@ class SecretsCollection:
         return dict(output)
 
     def exactly_equals(self, other: Any) -> bool:
-        return self.__eq__(other, strict=True)      # type: ignore
+        return self.__eq__(other, strict=True)
 
     def __getitem__(self, filename: str) -> Set[PotentialSecret]:
         return self.data[filename]
@@ -226,7 +221,7 @@ class SecretsCollection:
             for secret in sorted(
                 secrets,
                 key=lambda secret: (
-                    getattr(secret, 'line_number', 0),
+                    getattr(secret, "line_number", 0),
                     secret.secret_hash,
                     secret.type,
                 ),
@@ -250,9 +245,7 @@ class SecretsCollection:
             return False
 
         for filename in self.files:
-            self_mapping = {
-                (secret.secret_hash, secret.type): secret for secret in self[filename]
-            }
+            self_mapping = {(secret.secret_hash, secret.type): secret for secret in self[filename]}
             other_mapping = {
                 (secret.secret_hash, secret.type): secret for secret in other[filename]
             }
@@ -268,15 +261,15 @@ class SecretsCollection:
                 secretB = other_mapping[(secretA.secret_hash, secretA.type)]
 
                 valuesA = vars(secretA)
-                valuesA.pop('secret_value')
+                valuesA.pop("secret_value")
                 valuesB = vars(secretB)
-                valuesB.pop('secret_value')
+                valuesB.pop("secret_value")
 
-                if valuesA['line_number'] == 0 or valuesB['line_number'] == 0:
+                if valuesA["line_number"] == 0 or valuesB["line_number"] == 0:
                     # If line numbers are not provided (for either one), then don't compare
                     # line numbers.
-                    valuesA.pop('line_number')
-                    valuesB.pop('line_number')
+                    valuesA.pop("line_number")
+                    valuesB.pop("line_number")
 
                 if valuesA != valuesB:
                     return False
@@ -286,7 +279,7 @@ class SecretsCollection:
     def __ne__(self, other: Any) -> bool:
         return not self.__eq__(other)
 
-    def __sub__(self, other: Any) -> 'SecretsCollection':
+    def __sub__(self, other: Any) -> "SecretsCollection":
         """This behaves like set subtraction."""
         if not isinstance(other, SecretsCollection):
             raise NotImplementedError

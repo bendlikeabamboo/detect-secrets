@@ -30,20 +30,20 @@ class TestYAMLTransformer:
         assert YAMLTransformer().parse_file(file) == [
             'keyA: "string"',
             'keyB: "string"    # with comments',
-            '',
+            "",
             'keyC: "YWJjZGVm"',
             'keyD: "YWJjZGVm"     # with comments',
             'keyE: "invalidBinar"',
-            '',
-            '',
+            "",
+            "",
             'keyD: "nested string"',
         ]
 
     @staticmethod
-    @pytest.mark.xfail(reason='TODO')
+    @pytest.mark.xfail(reason="TODO")
     @pytest.mark.parametrize(
-        'block_chomping',
-        ('', '-', '+'),
+        "block_chomping",
+        ("", "-", "+"),
     )
     def test_multiline_block_scalar_folded_style(block_chomping):
         # NOTE(2020-11-07|domanchi): For YAML parsing, we don't really care about "literal" style
@@ -63,14 +63,14 @@ class TestYAMLTransformer:
         )
 
         assert YAMLTransformer().parse_file(file) == [
-            'multiline: this is a basic multiline string    # example',
+            "multiline: this is a basic multiline string    # example",
         ]
 
     @staticmethod
-    @pytest.mark.xfail(reason='TODO')
+    @pytest.mark.xfail(reason="TODO")
     @pytest.mark.parametrize(
-        'block_chomping',
-        ('', '-', '+'),
+        "block_chomping",
+        ("", "-", "+"),
     )
     def test_multiline_block_scalar_literal_style(block_chomping):
         file = mock_file_object(
@@ -80,7 +80,7 @@ class TestYAMLTransformer:
             """)[1:-1],
         )
 
-        assert YAMLTransformer().parse_file(file) == ['']
+        assert YAMLTransformer().parse_file(file) == [""]
 
     @staticmethod
     def test_single_line_flow_mapping():
@@ -94,9 +94,9 @@ class TestYAMLTransformer:
         )
 
         assert YAMLTransformer().parse_file(file) == [
-            '',
-            '',
-            '',
+            "",
+            "",
+            "",
             'keyB: "valueB"',
             'keyC: "valueC"',
             'keyD: "valueD"',
@@ -115,9 +115,9 @@ class TestYAMLTransformer:
         )
 
         assert YAMLTransformer().parse_file(file) == [
-            '',
-            '',
-            '',
+            "",
+            "",
+            "",
             'keyB: "valueB"',
             'keyC: "valueC"',
             'keyD: "valueD"',
@@ -133,7 +133,7 @@ class TestYAMLTransformer:
         )
 
         assert YAMLTransformer().parse_file(file) == [
-            '',
+            "",
             'keyB: "string"    # with comments',
         ]
 
@@ -152,11 +152,11 @@ class TestYAMLTransformer:
         )
 
         assert YAMLTransformer().parse_file(file) == [
-            '',
+            "",
             'keyA: "valueA"',
             'keyB: "valueB"',
-            '',
-            '',
+            "",
+            "",
             'keyC: "valueC"',
         ]
 
@@ -173,26 +173,25 @@ class TestYAMLFileParser:
         )
 
         assert YAMLFileParser(file).json() == {
-            'keyA': {
-                '__value__': 'string',
-                '__line__': 1,
-                '__original_key__': 'keyA',
+            "keyA": {
+                "__value__": "string",
+                "__line__": 1,
+                "__original_key__": "keyA",
             },
-
             # Ignores non-string or non-binary
-            'dict': {
-                'keyB': 123,
+            "dict": {
+                "keyB": 123,
             },
         }
 
     @staticmethod
     @pytest.mark.parametrize(
-        'block_scalar_style',
-        ('>', '|'),
+        "block_scalar_style",
+        (">", "|"),
     )
     @pytest.mark.parametrize(
-        'block_chomping',
-        ('', '-', '+'),
+        "block_chomping",
+        ("", "-", "+"),
     )
     def test_multi_line(block_scalar_style, block_chomping):
         # NOTE: Referenced https://yaml-multiline.info/ for the many ways to do multi line strings
@@ -208,31 +207,31 @@ class TestYAMLFileParser:
         )
 
         assert [item.line for item in YAMLFileParser(file)] == [
-            f'key: {block_scalar_style}{block_chomping}   # comment',
+            f"key: {block_scalar_style}{block_chomping}   # comment",
         ]
 
     @staticmethod
     @pytest.mark.parametrize(
-        ['yaml_value', 'expected_value'],
+        ["yaml_value", "expected_value"],
         [
-            ('string_value', 'string_value'),
-            ('!!binary YWJjZGVm', b'abcdef'),
+            ("string_value", "string_value"),
+            ("!!binary YWJjZGVm", b"abcdef"),
         ],
     )
     def test_possible_secret_format(yaml_value, expected_value):
-        content = 'key: {yaml_value}'.format(yaml_value=yaml_value)
+        content = "key: {yaml_value}".format(yaml_value=yaml_value)
         f = mock_file_object(content)
 
         result = YAMLFileParser(f).json()
-        assert result['key'] == {
-            '__value__': expected_value,
-            '__line__': mock.ANY,
-            '__original_key__': mock.ANY,
+        assert result["key"] == {
+            "__value__": expected_value,
+            "__line__": mock.ANY,
+            "__original_key__": mock.ANY,
         }
 
     @staticmethod
     @pytest.mark.parametrize(
-        'content, expected',
+        "content, expected",
         (
             # NOTE: The trailing new lines are important here!
             # It needs to be a string value, since we ignore non-string values (because we assume
@@ -249,14 +248,14 @@ class TestYAMLFileParser:
                     a:
                         {b: "2"}
                 """)[1:],
-                ['', 'b: "2"'],
+                ["", 'b: "2"'],
             ),
             (
                 textwrap.dedent("""
                     a:
                     - {b: "2"}
                 """)[1:],
-                ['', 'b: "2"'],
+                ["", 'b: "2"'],
             ),
             # New lines aren't important here, but since the first key is on the same line
             # as the start of the block, it will be handled funkily.
@@ -275,7 +274,7 @@ class TestYAMLFileParser:
                         b: "2",
                     }
                 """)[1:],
-                ['', 'a: "1"', 'b: "2"'],
+                ["", 'a: "1"', 'b: "2"'],
             ),
             (
                 textwrap.dedent("""
@@ -299,22 +298,22 @@ class TestYAMLFileParser:
         )
 
         assert YAMLFileParser(file).json() == {
-            'dictionary': [
+            "dictionary": [
                 {
-                    'keyA': {
-                        '__value__': 'valueA',
-                        '__line__': 2,
-                        '__original_key__': 'keyA',
+                    "keyA": {
+                        "__value__": "valueA",
+                        "__line__": 2,
+                        "__original_key__": "keyA",
                     },
-                    'keyB': {
-                        '__value__': 'valueB',
-                        '__line__': 2,
-                        '__original_key__': 'keyB',
+                    "keyB": {
+                        "__value__": "valueB",
+                        "__line__": 2,
+                        "__original_key__": "keyB",
                     },
-                    'keyC': {
-                        '__value__': 'valueC',
-                        '__line__': 2,
-                        '__original_key__': 'keyC',
+                    "keyC": {
+                        "__value__": "valueC",
+                        "__line__": 2,
+                        "__original_key__": "keyC",
                     },
                 },
             ],
@@ -331,22 +330,22 @@ class TestYAMLFileParser:
         )
 
         assert YAMLFileParser(file).json() == {
-            'dictionary': [
+            "dictionary": [
                 {
-                    'keyA': {
-                        '__value__': 'valueA',
-                        '__line__': 2,
-                        '__original_key__': 'keyA',
+                    "keyA": {
+                        "__value__": "valueA",
+                        "__line__": 2,
+                        "__original_key__": "keyA",
                     },
-                    'keyB': {
-                        '__value__': 'valueB',
-                        '__line__': 2,
-                        '__original_key__': 'keyB',
+                    "keyB": {
+                        "__value__": "valueB",
+                        "__line__": 2,
+                        "__original_key__": "keyB",
                     },
-                    'keyC': {
-                        '__value__': 'valueC',
-                        '__line__': 2,
-                        '__original_key__': 'keyC',
+                    "keyC": {
+                        "__value__": "valueC",
+                        "__line__": 2,
+                        "__original_key__": "keyC",
                     },
                 },
             ],
@@ -363,15 +362,15 @@ class TestYAMLFileParser:
         )
 
         assert YAMLFileParser(file).json() == {
-            'a': {
-                '__value__': '1',
-                '__line__': 1,
-                '__original_key__': 'a',
+            "a": {
+                "__value__": "1",
+                "__line__": 1,
+                "__original_key__": "a",
             },
-            'b': {
-                '__value__': '2',
-                '__line__': 2,
-                '__original_key__': 'b',
+            "b": {
+                "__value__": "2",
+                "__line__": 2,
+                "__original_key__": "b",
             },
         }
 
@@ -387,15 +386,15 @@ class TestYAMLFileParser:
         )
 
         assert YAMLFileParser(file).json() == {
-            'a': {
-                '__value__': '1',
-                '__line__': 2,
-                '__original_key__': 'a',
+            "a": {
+                "__value__": "1",
+                "__line__": 2,
+                "__original_key__": "a",
             },
-            'b': {
-                '__value__': '2',
-                '__line__': 3,
-                '__original_key__': 'b',
+            "b": {
+                "__value__": "2",
+                "__line__": 3,
+                "__original_key__": "b",
             },
         }
 
@@ -409,11 +408,11 @@ class TestYAMLFileParser:
         )
 
         assert YAMLFileParser(file).json() == {
-            'a': {},
-            'b': {
-                '__value__': '2',
-                '__line__': 2,
-                '__original_key__': 'b',
+            "a": {},
+            "b": {
+                "__value__": "2",
+                "__line__": 2,
+                "__original_key__": "b",
             },
         }
 
@@ -427,17 +426,17 @@ class TestYAMLFileParser:
         )
 
         assert YAMLFileParser(file).json() == {
-            'a': {
-                'b': {
-                    '__value__': '2',
-                    '__line__': 1,
-                    '__original_key__': 'b',
+            "a": {
+                "b": {
+                    "__value__": "2",
+                    "__line__": 1,
+                    "__original_key__": "b",
                 },
             },
-            'c': {
-                '__value__': '3',
-                '__line__': 2,
-                '__original_key__': 'c',
+            "c": {
+                "__value__": "3",
+                "__line__": 2,
+                "__original_key__": "c",
             },
         }
 
@@ -451,22 +450,22 @@ class TestYAMLFileParser:
         )
 
         assert YAMLFileParser(file).json() == {
-            'a': {
-                'b': {
-                    '__value__': '2',
-                    '__line__': 1,
-                    '__original_key__': 'b',
+            "a": {
+                "b": {
+                    "__value__": "2",
+                    "__line__": 1,
+                    "__original_key__": "b",
                 },
-                'c': {
-                    '__value__': '3',
-                    '__line__': 1,
-                    '__original_key__': 'c',
+                "c": {
+                    "__value__": "3",
+                    "__line__": 1,
+                    "__original_key__": "c",
                 },
             },
-            'd': {
-                '__value__': '4',
-                '__line__': 2,
-                '__original_key__': 'd',
+            "d": {
+                "__value__": "4",
+                "__line__": 2,
+                "__original_key__": "d",
             },
         }
 
@@ -482,17 +481,17 @@ class TestYAMLFileParser:
         )
 
         assert YAMLFileParser(file).json() == {
-            'keyA': {
-                'keyB': {
-                    '__value__': 'string',
-                    '__line__': 2,
-                    '__original_key__': 'keyB',
+            "keyA": {
+                "keyB": {
+                    "__value__": "string",
+                    "__line__": 2,
+                    "__original_key__": "keyB",
                 },
-                'keyC': {
-                    'keyD': {
-                        '__value__': 'string',
-                        '__line__': 4,
-                        '__original_key__': 'keyD',
+                "keyC": {
+                    "keyD": {
+                        "__value__": "string",
+                        "__line__": 4,
+                        "__original_key__": "keyD",
                     },
                 },
             },
@@ -514,34 +513,34 @@ class TestYAMLFileParser:
 
         temp = YAMLFileParser(file).json()
         assert temp == {
-            'groupA': {
-                'keyA': {
-                    '__value__': 'valueA',
-                    '__line__': 2,
-                    '__original_key__': 'keyA',
+            "groupA": {
+                "keyA": {
+                    "__value__": "valueA",
+                    "__line__": 2,
+                    "__original_key__": "keyA",
                 },
-                'keyB': {
-                    '__value__': 'valueB',
-                    '__line__': 3,
-                    '__original_key__': 'keyB',
+                "keyB": {
+                    "__value__": "valueB",
+                    "__line__": 3,
+                    "__original_key__": "keyB",
                 },
             },
-            'groupB': {
-                'keyC': {
-                    '__value__': 'valueC',
-                    '__line__': 6,
-                    '__original_key__': 'keyC',
+            "groupB": {
+                "keyC": {
+                    "__value__": "valueC",
+                    "__line__": 6,
+                    "__original_key__": "keyC",
                 },
-                'keyD': {
-                    'keyA': {
-                        '__value__': 'valueA',
-                        '__line__': 2,
-                        '__original_key__': 'keyA',
+                "keyD": {
+                    "keyA": {
+                        "__value__": "valueA",
+                        "__line__": 2,
+                        "__original_key__": "keyA",
                     },
-                    'keyB': {
-                        '__value__': 'valueB',
-                        '__line__': 3,
-                        '__original_key__': 'keyB',
+                    "keyB": {
+                        "__value__": "valueB",
+                        "__line__": 3,
+                        "__original_key__": "keyB",
                     },
                 },
             },

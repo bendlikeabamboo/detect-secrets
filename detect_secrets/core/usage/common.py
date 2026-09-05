@@ -8,7 +8,7 @@ from ...settings import get_settings
 def valid_path(path: str) -> str:
     if not os.path.isfile(path):
         raise argparse.ArgumentTypeError(
-            f'Invalid path: {path}',
+            f"Invalid path: {path}",
         )
 
     return path

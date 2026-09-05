@@ -133,7 +133,8 @@ never need to interact with this directly!** If you need to initialize a plugin,
 
 ```python
 from detect_secrets.core import plugins
-plugin = plugins.initialize.from_plugin_classname('Base64HighEntropyString')
+
+plugin = plugins.initialize.from_plugin_classname("Base64HighEntropyString")
 ```
 
 #### Filters

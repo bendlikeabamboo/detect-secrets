@@ -1,28 +1,28 @@
 import argparse
 import os
-from typing import cast
 from typing import Iterable
+from typing import cast
 
-from .. import plugins
 from ...exceptions import InvalidFile
 from ...settings import get_settings
+from .. import plugins
 from ..plugins.util import get_mapping_from_secret_type_to_class
 
 
 def add_plugin_options(parent: argparse.ArgumentParser) -> None:
     parser = parent.add_argument_group(
-        title='plugin options',
+        title="plugin options",
         description=(
-            'Configure settings for each secret scanning '
-            'ruleset. By default, all plugins are enabled '
-            'unless explicitly disabled.'
+            "Configure settings for each secret scanning "
+            "ruleset. By default, all plugins are enabled "
+            "unless explicitly disabled."
         ),
     )
 
     parser.add_argument(
-        '--list-all-plugins',
-        action='store_true',
-        help='Lists all plugins that will be used for the scan.',
+        "--list-all-plugins",
+        action="store_true",
+        help="Lists all plugins that will be used for the scan.",
     )
 
     _add_custom_plugins(parser)
@@ -38,17 +38,17 @@ def _add_custom_plugins(parser: argparse._ArgumentGroup) -> None:
         # TODO: do we also want to overload this and allow specific selection of plugins for
         # baselines that don't currently use those plugins?
         if not os.path.isfile(path):
-            raise argparse.ArgumentTypeError(f'{path} is not a valid file.')
+            raise argparse.ArgumentTypeError(f"{path} is not a valid file.")
 
         return path
 
     parser.add_argument(
-        '-p',
-        '--plugin',
+        "-p",
+        "--plugin",
         type=valid_looking_paths,
         nargs=1,
-        action='append',        # so we can support multiple flags with same value
-        help='Specify path to custom secret detector plugin.',
+        action="append",  # so we can support multiple flags with same value
+        help="Specify path to custom secret detector plugin.",
     )
 
 
@@ -57,14 +57,13 @@ def _add_custom_limits(parser: argparse._ArgumentGroup) -> None:
         value = float(string)
         if value < 0 or value > 8:
             raise argparse.ArgumentTypeError(
-                f'{string} must be between 0.0 and 8.0',
+                f"{string} must be between 0.0 and 8.0",
             )
 
         return value
 
     high_entropy_help_text = (
-        'Sets the entropy limit for high entropy strings. '
-        'Value must be between 0.0 and 8.0,'
+        "Sets the entropy limit for high entropy strings. Value must be between 0.0 and 8.0,"
     )
 
     # NOTE: This doesn't have explicit default values since we want to be able to determine
@@ -72,37 +71,36 @@ def _add_custom_limits(parser: argparse._ArgumentGroup) -> None:
     # to be the same as the default value). This distinction plays an important role when doing
     # precedence calculation (default value < baseline config < CLI explicit value)
     parser.add_argument(
-        '--base64-limit',
+        "--base64-limit",
         type=minmax_type,
-        nargs='?',
-        help=high_entropy_help_text + ' defaults to 4.5.',
+        nargs="?",
+        help=high_entropy_help_text + " defaults to 4.5.",
     )
     parser.add_argument(
-        '--hex-limit',
+        "--hex-limit",
         type=minmax_type,
-        nargs='?',
-        help=high_entropy_help_text + ' defaults to 3.0.',
+        nargs="?",
+        help=high_entropy_help_text + " defaults to 3.0.",
     )
 
 
 def _add_disable_flag(parser: argparse._ArgumentGroup) -> None:
     def valid_plugin_name(string: str) -> str:
         valid_plugin_names = {
-            item.__name__
-            for item in get_mapping_from_secret_type_to_class().values()
+            item.__name__ for item in get_mapping_from_secret_type_to_class().values()
         }
 
         if string not in valid_plugin_names:
-            raise argparse.ArgumentTypeError(f'Invalid plugin classname: {string}')
+            raise argparse.ArgumentTypeError(f"Invalid plugin classname: {string}")
 
         return string
 
     parser.add_argument(
-        '--disable-plugin',
+        "--disable-plugin",
         type=valid_plugin_name,
         nargs=1,
-        action='append',        # so we can support multiple flags with the same value
-        help='Plugin class names to disable. e.g. Base64HighEntropyString',
+        action="append",  # so we can support multiple flags with the same value
+        help="Plugin class names to disable. e.g. Base64HighEntropyString",
     )
 
 
@@ -117,10 +115,10 @@ def parse_args(args: argparse.Namespace) -> None:
     #
     # Default values will be applied at the plugin level.
     if args.base64_limit:
-        get_settings().plugins['Base64HighEntropyString']['limit'] = args.base64_limit
+        get_settings().plugins["Base64HighEntropyString"]["limit"] = args.base64_limit
 
     if args.hex_limit:
-        get_settings().plugins['HexHighEntropyString']['limit'] = args.hex_limit
+        get_settings().plugins["HexHighEntropyString"]["limit"] = args.hex_limit
 
     if args.plugin:
         # Flatten entry for easier parsing.
@@ -135,12 +133,14 @@ def parse_args(args: argparse.Namespace) -> None:
             try:
                 custom_plugins = cast(Iterable, plugins.initialize.from_file(filename))
             except InvalidFile:
-                raise argparse.ArgumentTypeError(f'Cannot load plugins from {filename}.')
+                raise argparse.ArgumentTypeError(f"Cannot load plugins from {filename}.")
 
-            get_settings().configure_plugins([
-                {
-                    'name': item.__name__,
-                    'path': f'file://{os.path.abspath(filename)}',
-                }
-                for item in custom_plugins
-            ])
+            get_settings().configure_plugins(
+                [
+                    {
+                        "name": item.__name__,
+                        "path": f"file://{os.path.abspath(filename)}",
+                    }
+                    for item in custom_plugins
+                ]
+            )

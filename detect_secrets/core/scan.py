@@ -1,13 +1,13 @@
 import os
 import subprocess
 from typing import Any
-from typing import cast
 from typing import Generator
 from typing import Iterable
 from typing import List
 from typing import Set
 from typing import Tuple
 from typing import Union
+from typing import cast
 
 from ..filters.allowlist import is_line_allowlisted
 from ..settings import get_filters
@@ -29,7 +29,7 @@ from .potential_secret import PotentialSecret
 def get_files_to_scan(
     *paths: str,
     should_scan_all_files: bool = False,
-    root: str = '',
+    root: str = "",
 ) -> Generator[str, None, None]:
     """
     If we specify specific files, we should be able to scan them. This abides by the
@@ -71,7 +71,7 @@ def get_files_to_scan(
             try:
                 valid_paths = git.get_tracked_files(git.get_root_directory(root))
             except subprocess.CalledProcessError:
-                log.warning('Did not detect git repository. Try scanning all files instead.')
+                log.warning("Did not detect git repository. Try scanning all files instead.")
                 valid_paths = False
 
         # Since valid_paths attempts to get *all* tracked files in the repository, we just need
@@ -99,10 +99,7 @@ def get_files_to_scan(
                     # e.g. symbolic links may be pointing outside the root directory
                     continue
 
-                if (
-                    valid_paths is True
-                    or relative_path in valid_paths
-                ):
+                if valid_paths is True or relative_path in valid_paths:
                     yield relative_path
 
 
@@ -110,7 +107,7 @@ def scan_line(line: str) -> Generator[PotentialSecret, None, None]:
     """Used for adhoc string scanning."""
     # Disable this, since it doesn't make sense to run this for adhoc usage.
     get_settings().disable_filters(
-        'detect_secrets.filters.common.is_invalid_file',
+        "detect_secrets.filters.common.is_invalid_file",
     )
     get_filters.cache_clear()
     context = get_code_snippet(lines=[line], line_number=1)
@@ -120,14 +117,14 @@ def scan_line(line: str) -> Generator[PotentialSecret, None, None]:
         for plugin in get_plugins()
         for secret in _scan_line(
             plugin=plugin,
-            filename='adhoc-string-scan',
+            filename="adhoc-string-scan",
             line=line,
             line_number=0,
             enable_eager_search=True,
             context=context,
         )
         if not _is_filtered_out(
-            required_filter_parameters=['context'],
+            required_filter_parameters=["context"],
             filename=secret.filename,
             secret=secret.secret_value,
             plugin=plugin,
@@ -139,14 +136,14 @@ def scan_line(line: str) -> Generator[PotentialSecret, None, None]:
 
 def scan_file(filename: str) -> Generator[PotentialSecret, None, None]:
     try:
-        if not get_plugins():   # pragma: no cover
-            log.error('No plugins to scan with!')
+        if not get_plugins():  # pragma: no cover
+            log.error("No plugins to scan with!")
             return
     except FileNotFoundError:
-        log.error('Unable to load plugins!')
+        log.error("Unable to load plugins!")
         return
 
-    if _is_filtered_out(required_filter_parameters=['filename'], filename=filename):
+    if _is_filtered_out(required_filter_parameters=["filename"], filename=filename):
         return
 
     try:
@@ -162,7 +159,7 @@ def scan_file(filename: str) -> Generator[PotentialSecret, None, None]:
             if has_secret:
                 break
     except IOError:
-        log.warning(f'Unable to open file: {filename}')
+        log.warning(f"Unable to open file: {filename}")
         return
 
 
@@ -170,8 +167,8 @@ def scan_diff(diff: str) -> Generator[PotentialSecret, None, None]:
     """
     :raises: ImportError
     """
-    if not get_plugins():   # pragma: no cover
-        log.error('No plugins to scan with!')
+    if not get_plugins():  # pragma: no cover
+        log.error("No plugins to scan with!")
         return
 
     for filename, lines in _get_lines_from_diff(diff):
@@ -187,12 +184,12 @@ def scan_for_allowlisted_secrets_in_file(filename: str) -> Generator[PotentialSe
 
     This scans specifically for these lines, and ignores everything else.
     """
-    if not get_plugins():   # pragma: no cover
-        log.error('No plugins to scan with!')
+    if not get_plugins():  # pragma: no cover
+        log.error("No plugins to scan with!")
         return
 
     if _is_filtered_out(
-        required_filter_parameters=['filename'],
+        required_filter_parameters=["filename"],
         filename=filename,
     ):
         return
@@ -204,13 +201,13 @@ def scan_for_allowlisted_secrets_in_file(filename: str) -> Generator[PotentialSe
             yield from _scan_for_allowlisted_secrets_in_lines(enumerate(lines, start=1), filename)
             break
     except IOError:
-        log.warning(f'Unable to open file: {filename}')
+        log.warning(f"Unable to open file: {filename}")
         return
 
 
 def scan_for_allowlisted_secrets_in_diff(diff: str) -> Generator[PotentialSecret, None, None]:
-    if not get_plugins():   # pragma: no cover
-        log.error('No plugins to scan with!')
+    if not get_plugins():  # pragma: no cover
+        log.error("No plugins to scan with!")
         return
 
     for filename, lines in _get_lines_from_diff(diff):
@@ -223,7 +220,7 @@ def _scan_for_allowlisted_secrets_in_lines(
 ) -> Generator[PotentialSecret, None, None]:
     # We control the setting here because it makes more sense than requiring the caller
     # to set this setting before calling this function.
-    get_settings().disable_filters('detect_secrets.filters.allowlist.is_line_allowlisted')
+    get_settings().disable_filters("detect_secrets.filters.allowlist.is_line_allowlisted")
     get_filters.cache_clear()
 
     line_numbers, lines = zip(*lines)
@@ -237,7 +234,7 @@ def _scan_for_allowlisted_secrets_in_lines(
         ):
             continue
 
-        if _is_filtered_out(required_filter_parameters=['line'], filename=filename, line=line):
+        if _is_filtered_out(required_filter_parameters=["line"], filename=filename, line=line):
             continue
 
         for plugin in get_plugins():
@@ -259,7 +256,7 @@ def _get_lines_from_file(filename: str) -> Generator[List[str], None, None]:
     :raises: FileNotFoundError
     """
     with open(filename) as f:
-        log.info(f'Checking file: {filename}')
+        log.info(f"Checking file: {filename}")
 
         try:
             lines = get_transformed_file(cast(NamedIO, f))
@@ -291,7 +288,7 @@ def _get_lines_from_diff(diff: str) -> Generator[Tuple[str, List[Tuple[int, str]
     patch_set = PatchSet.from_string(diff)
     for patch_file in patch_set:
         filename = patch_file.path
-        if _is_filtered_out(required_filter_parameters=['filename'], filename=filename):
+        if _is_filtered_out(required_filter_parameters=["filename"], filename=filename):
             continue
 
         yield (
@@ -315,7 +312,7 @@ def _process_line_based_plugins(
     # NOTE: We iterate through lines *then* plugins, because we want to quit early if any of the
     # filters return True.
     for line_number, line in lines:
-        log.debug(f'Processing {filename}:{line_number}')
+        log.debug(f"Processing {filename}:{line_number}")
         line = line.rstrip()
         code_snippet = get_code_snippet(
             lines=line_content,
@@ -324,7 +321,7 @@ def _process_line_based_plugins(
 
         # We apply line-specific filters, and see whether that allows us to quit early.
         if _is_filtered_out(
-            required_filter_parameters=['line'],
+            required_filter_parameters=["line"],
             filename=filename,
             line=line,
             context=code_snippet,
@@ -342,7 +339,7 @@ def _process_line_based_plugins(
                 context=code_snippet,
             )
             if not _is_filtered_out(
-                required_filter_parameters=['context'],
+                required_filter_parameters=["context"],
                 filename=secret.filename,
                 secret=secret.secret_value,
                 plugin=plugin,
@@ -377,7 +374,7 @@ def _scan_line(
         secret
         for secret in secrets
         if not _is_filtered_out(
-            required_filter_parameters=['secret'],
+            required_filter_parameters=["secret"],
             filename=secret.filename,
             secret=secret.secret_value,
             plugin=plugin,
@@ -390,20 +387,20 @@ def _is_filtered_out(required_filter_parameters: Iterable[str], **kwargs: Any) -
     for filter_fn in get_filters_with_parameter(*required_filter_parameters):
         try:
             if call_function_with_arguments(filter_fn, **kwargs):
-                if 'secret' in kwargs:
+                if "secret" in kwargs:
                     debug_msg = f'Skipping "{0}" due to `{1}`.'.format(
-                        kwargs['secret'],
+                        kwargs["secret"],
                         filter_fn.path,
                     )
-                elif list(kwargs.keys()) == ['filename']:
+                elif list(kwargs.keys()) == ["filename"]:
                     # We want to make sure this is only run if we're skipping files (as compared
                     # to other filters that may include `filename` as a parameter).
                     debug_msg = 'Skipping "{0}" due to `{1}`'.format(
-                        kwargs['filename'],
+                        kwargs["filename"],
                         filter_fn.path,
                     )
                 else:
-                    debug_msg = 'Skipping secret due to `{0}`.'.format(filter_fn.path)
+                    debug_msg = "Skipping secret due to `{0}`.".format(filter_fn.path)
 
                 log.info(debug_msg)
                 return True
@@ -434,8 +431,4 @@ def get_filters_with_parameter(*parameters: str) -> List[SelfAwareCallable]:
     """
     minimum_parameters = set(parameters)
 
-    return [
-        filter
-        for filter in get_filters()
-        if minimum_parameters <= filter.injectable_variables
-    ]
+    return [filter for filter in get_filters() if minimum_parameters <= filter.injectable_variables]

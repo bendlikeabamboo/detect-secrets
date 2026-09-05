@@ -10,9 +10,9 @@ def parser():
 
 def test_normal_mode_requires_single_file(parser):
     with pytest.raises(SystemExit):
-        parser.parse_args(['audit', 'fileA', 'fileB'])
+        parser.parse_args(["audit", "fileA", "fileB"])
 
 
 def test_diff_mode_requires_two_files(parser):
     with pytest.raises(SystemExit):
-        parser.parse_args(['audit', 'fileA', '--diff'])
+        parser.parse_args(["audit", "fileA", "--diff"])

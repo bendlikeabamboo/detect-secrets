@@ -6,35 +6,33 @@ from detect_secrets.plugins.high_entropy_strings import HighEntropyStringsPlugin
 
 
 @pytest.mark.parametrize(
-    'plugin, non_secret, secret',
+    "plugin, non_secret, secret",
     (
-        (HexHighEntropyString, 'aaaaaa', '2b00042f7481c7b056c4b410d28f33cf'),
+        (HexHighEntropyString, "aaaaaa", "2b00042f7481c7b056c4b410d28f33cf"),
         (
             Base64HighEntropyString,
-            'c3VwZXIgc2VjcmV0IHZhbHVl',     # too short
-            'c3VwZXIgbG9uZyBzdHJpbmcgc2hvdWxkIGNhdXNlIGVub3VnaCBlbnRyb3B5',
+            "c3VwZXIgc2VjcmV0IHZhbHVl",  # too short
+            "c3VwZXIgbG9uZyBzdHJpbmcgc2hvdWxkIGNhdXNlIGVub3VnaCBlbnRyb3B5",
         ),
-
         # url-safe
         (
             Base64HighEntropyString,
-            'Zrm-ySTAq7D2sHk=',     # too short
-            'I6FwzQZFL9l-44nviI1F04OTmorMaVQf9GS4Oe07qxL_vNkW6CRas4Lo42vqJMT0M6riJfma_f-pTAuoX2U=',
+            "Zrm-ySTAq7D2sHk=",  # too short
+            "I6FwzQZFL9l-44nviI1F04OTmorMaVQf9GS4Oe07qxL_vNkW6CRas4Lo42vqJMT0M6riJfma_f-pTAuoX2U=",
         ),
     ),
 )
 class TestHighEntropyString:
     @staticmethod
     @pytest.mark.parametrize(
-        'format, should_be_caught',
+        "format, should_be_caught",
         (
             ("'{non_secret}'", False),
             ('"{non_secret}"', False),
             ('"{secret}"', True),
             ("'{secret}'", True),
-
             # Non-quoted string
-            ('{secret}', False),
+            ("{secret}", False),
         ),
     )
     def test_basic(plugin, non_secret, secret, format, should_be_caught):
@@ -42,7 +40,7 @@ class TestHighEntropyString:
         # limit check lives in this function.
         results = list(
             plugin().analyze_line(
-                filename='does not matter',
+                filename="does not matter",
                 line=format.format(non_secret=non_secret, secret=secret),
                 line_number=0,
             ),
@@ -51,7 +49,7 @@ class TestHighEntropyString:
 
     @staticmethod
     @pytest.mark.parametrize(
-        'format, num_results',
+        "format, num_results",
         (
             (
                 'String #1: "{non_secret}"; String #2: "{secret}"',
@@ -68,7 +66,7 @@ class TestHighEntropyString:
     def test_multiple_strings_same_line(plugin, non_secret, secret, format, num_results):
         results = list(
             plugin().analyze_line(
-                filename='does not matter',
+                filename="does not matter",
                 line=format.format(non_secret=non_secret, secret=secret),
                 line_number=0,
             ),
@@ -77,7 +75,7 @@ class TestHighEntropyString:
 
     @staticmethod
     @pytest.mark.parametrize(
-        'limit',
+        "limit",
         (-1, 15),
     )
     def test_entropy_limit(plugin, non_secret, secret, limit):
@@ -97,34 +95,30 @@ class TestHexEntropyCalculation:
 
     @staticmethod
     def test_basic(original_hex_detector):
-        value = '0123456789'
-        assert (
-            HexHighEntropyString().calculate_shannon_entropy(value)
-            < original_hex_detector().calculate_shannon_entropy(value)
-        )
+        value = "0123456789"
+        assert HexHighEntropyString().calculate_shannon_entropy(
+            value
+        ) < original_hex_detector().calculate_shannon_entropy(value)
 
         # This is the goal.
         assert HexHighEntropyString().calculate_shannon_entropy(value) < 3
 
     @staticmethod
     def test_length_dependency(original_hex_detector):
-        assert (
-            HexHighEntropyString().calculate_shannon_entropy('0123456789')
-            < HexHighEntropyString().calculate_shannon_entropy('01234567890123456789')
-        )
+        assert HexHighEntropyString().calculate_shannon_entropy(
+            "0123456789"
+        ) < HexHighEntropyString().calculate_shannon_entropy("01234567890123456789")
 
     @staticmethod
     def test_only_with_numbers(original_hex_detector):
-        value = '12345a'
-        assert (
-            HexHighEntropyString().calculate_shannon_entropy(value)
-            == original_hex_detector().calculate_shannon_entropy(value)
-        )
+        value = "12345a"
+        assert HexHighEntropyString().calculate_shannon_entropy(
+            value
+        ) == original_hex_detector().calculate_shannon_entropy(value)
 
     @staticmethod
     def test_single_case(original_hex_detector):
-        value = '0'
-        assert (
-            HexHighEntropyString().calculate_shannon_entropy(value)
-            == original_hex_detector().calculate_shannon_entropy(value)
-        )
+        value = "0"
+        assert HexHighEntropyString().calculate_shannon_entropy(
+            value
+        ) == original_hex_detector().calculate_shannon_entropy(value)

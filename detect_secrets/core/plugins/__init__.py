@@ -1,2 +1,4 @@
-from . import initialize    # noqa: F401
-from .util import Plugin    # noqa: F401
+from . import initialize
+from .util import Plugin
+
+__all__ = ["Plugin", "initialize"]

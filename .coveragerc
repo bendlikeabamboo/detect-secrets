@@ -1,9 +1,6 @@
 [run]
 branch = True
 source = .
-omit =
-    .tox/*
-    setup.py
 
 [report]
 skip_covered = True

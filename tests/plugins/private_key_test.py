@@ -6,18 +6,14 @@ from testing.mocks import mock_named_temporary_file
 
 
 @pytest.mark.parametrize(
-    'file_content',
+    "file_content",
     [
         (
-            '-----BEGIN RSA PRIVATE KEY-----\n'
-            'super secret private key here\n'
-            '-----END RSA PRIVATE KEY-----'
+            "-----BEGIN RSA PRIVATE KEY-----\n"
+            "super secret private key here\n"
+            "-----END RSA PRIVATE KEY-----"
         ),
-        (
-            'some text here\n'
-            '-----BEGIN PRIVATE KEY-----\n'
-            'yabba dabba doo'
-        ),
+        ("some text here\n-----BEGIN PRIVATE KEY-----\nyabba dabba doo"),
     ],
 )
 def test_basic(file_content):
@@ -33,7 +29,9 @@ def test_basic(file_content):
 
 @pytest.fixture(autouse=True)
 def configure_plugins():
-    with transient_settings({
-        'plugins_used': [{'name': 'PrivateKeyDetector'}],
-    }):
+    with transient_settings(
+        {
+            "plugins_used": [{"name": "PrivateKeyDetector"}],
+        }
+    ):
         yield

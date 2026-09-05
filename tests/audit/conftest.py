@@ -3,8 +3,8 @@ import pytest
 from detect_secrets import main as main_module
 from detect_secrets.audit import io
 from detect_secrets.audit.common import open_file
-from testing.mocks import mock_printer
 from testing.mocks import PrinterShim
+from testing.mocks import mock_printer
 
 
 @pytest.fixture(autouse=True)

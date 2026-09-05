@@ -4,9 +4,9 @@ from detect_secrets.core.potential_secret import PotentialSecret
 
 
 def potential_secret_factory(
-    type: str = 'type',
-    filename: str = 'filename',
-    secret: str = 'secret',
+    type: str = "type",
+    filename: str = "filename",
+    secret: str = "secret",
     line_number: int = 1,
     **kwargs: Any,
 ) -> PotentialSecret:
@@ -14,9 +14,5 @@ def potential_secret_factory(
     because of the default values.
     """
     return PotentialSecret(
-        type=type,
-        filename=filename,
-        secret=secret,
-        line_number=line_number,
-        **kwargs
+        type=type, filename=filename, secret=secret, line_number=line_number, **kwargs
     )

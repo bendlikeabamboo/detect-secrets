@@ -20,7 +20,7 @@ def register_plugin(plugin: Plugin) -> Generator[None, None, None]:
     get_instance.__name__ = plugin.__class__.__name__
 
     try:
-        get_mapping_from_secret_type_to_class()[plugin.secret_type] = get_instance  # type: ignore
+        get_mapping_from_secret_type_to_class()[plugin.secret_type] = get_instance
         yield
     finally:
         # On next run, it should re-initialize to base state.
@@ -29,11 +29,12 @@ def register_plugin(plugin: Plugin) -> Generator[None, None, None]:
 
 class HippoDetector(RegexBasedDetector):
     """Scans for hippos."""
-    secret_type = 'Hippo'
+
+    secret_type = "Hippo"
 
     denylist = (
         re.compile(
-            r'(hippo)',
+            r"(hippo)",
             re.IGNORECASE,
         ),
     )

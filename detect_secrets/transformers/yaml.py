@@ -3,7 +3,6 @@ import re
 from collections import deque
 from functools import lru_cache
 from typing import Any
-from typing import cast
 from typing import Dict
 from typing import Iterator
 from typing import List
@@ -12,14 +11,17 @@ from typing import Optional
 from typing import Pattern
 from typing import Tuple
 from typing import Union
+from typing import cast
 
 import yaml
+import yaml.composer
+import yaml.parser
 from yaml.tokens import FlowEntryToken
 from yaml.tokens import KeyToken
 
 from ..types import NamedIO
-from ..util.filetype import determine_file_type
 from ..util.filetype import FileType
+from ..util.filetype import determine_file_type
 from .base import BaseTransformer
 from .exceptions import ParsingError
 
@@ -49,7 +51,7 @@ class YAMLTransformer(BaseTransformer):
                 seen.add(item)
 
             while len(lines) < item.line_number - 1:
-                lines.append('')
+                lines.append("")
 
             value = item.value
             if isinstance(value, bytes):
@@ -73,7 +75,7 @@ class YAMLTransformer(BaseTransformer):
             # TODO: parse the difference between block_scalar styles, and handle appropriately.
             # See test cases for more details.
 
-            comment = ''
+            comment = ""
             matches = _yaml_comment_regex().search(line)
             if matches:
                 comment = matches.group(0)
@@ -86,7 +88,7 @@ class YAMLTransformer(BaseTransformer):
             # However, if there is a quote inside, we need to escape it.
             value = value.replace('"', '\\"')
 
-            lines.append(f'{item.key}: "{value}"{comment}')     # type: ignore
+            lines.append(f'{item.key}: "{value}"{comment}')
 
         return lines
 
@@ -112,7 +114,7 @@ def _yaml_comment_regex() -> Pattern:
     correct. Therefore, if we add whitespace before the comment character, we can know that
     everything else *after* the comment character is a comment for a given line.
     """
-    return re.compile(r'(\s+#[\S ]*)')
+    return re.compile(r"(\s+#[\S ]*)")
 
 
 class YAMLValue(NamedTuple):
@@ -186,7 +188,7 @@ class YAMLFileParser:
 
             # If it doesn't have our meta-tags, it's not a value worth scanning.
             try:
-                if '__line__' not in item:
+                if "__line__" not in item:
                     if isinstance(item, str):
                         continue
 
@@ -204,15 +206,14 @@ class YAMLFileParser:
                 continue
 
             yield YAMLValue(
-                key=item['__original_key__'],
-                value=item['__value__'],
-                line_number=item['__line__'],
-
+                key=item["__original_key__"],
+                value=item["__value__"],
+                line_number=item["__line__"],
                 # We extract this separately because the parser drops the comments
                 # (at least up to version 3.13).
                 # https://github.com/yaml/pyyaml/blob/a2d481b8dbd2b352cb001f07091ccf669227290f/lib3/yaml/scanner.py#L749
                 # The line value feeds into the filters, and helps us tune false positives.
-                line=lines[item['__line__'] - 1],
+                line=lines[item["__line__"] - 1],
             )
 
     def _compose_node_shim(
@@ -220,19 +221,15 @@ class YAMLFileParser:
         parent: Optional[yaml.nodes.Node],
         index: Optional[yaml.nodes.Node],
     ) -> Optional[yaml.nodes.Node]:
-        line = (
-            self.loader.marks[-1].line
-            if self.is_inline_flow_mapping_key
-            else self.loader.line
-        )
+        line = self.loader.marks[-1].line if self.is_inline_flow_mapping_key else self.loader.line
 
-        node = yaml.composer.Composer.compose_node(self.loader, parent, index)  # type: ignore
+        node = yaml.composer.Composer.compose_node(self.loader, parent, index)
         if node is None:
             return None
 
-        node.__line__ = line + 1    # type: ignore
+        node.__line__ = line + 1
 
-        if node.tag.endswith(':map'):
+        if node.tag.endswith(":map"):
             # Reset the inline flow mapping key when the end of a mapping is reached
             # to avoid complications with empty mappings
             self.is_inline_flow_mapping_key = False
@@ -295,10 +292,7 @@ def _tag_dict_values(map_node: yaml.nodes.MappingNode) -> yaml.nodes.MappingNode
     """
     new_values = []
     for key, value in map_node.value:
-        if not (
-            value.tag.endswith(':str') or
-            value.tag.endswith(':binary')
-        ):
+        if not (value.tag.endswith(":str") or value.tag.endswith(":binary")):
             new_values.append((key, value))
             continue
 
@@ -306,19 +300,19 @@ def _tag_dict_values(map_node: yaml.nodes.MappingNode) -> yaml.nodes.MappingNode
             tag=map_node.tag,
             value=[
                 _create_key_value_pair_for_mapping_node_value(
-                    key='__value__',
+                    key="__value__",
                     value=value.value,
                     tag=value.tag,
                 ),
                 _create_key_value_pair_for_mapping_node_value(
-                    key='__line__',
+                    key="__line__",
                     value=str(value.__line__),
-                    tag='tag:yaml.org,2002:int',
+                    tag="tag:yaml.org,2002:int",
                 ),
                 _create_key_value_pair_for_mapping_node_value(
-                    key='__original_key__',
+                    key="__original_key__",
                     value=key.value,
-                    tag='tag:yaml.org,2002:str',
+                    tag="tag:yaml.org,2002:str",
                 ),
             ],
         )
@@ -342,7 +336,7 @@ def _create_key_value_pair_for_mapping_node_value(
 ) -> Tuple[yaml.nodes.ScalarNode, yaml.nodes.ScalarNode]:
     return (
         yaml.nodes.ScalarNode(
-            tag='tag:yaml.org,2002:str',
+            tag="tag:yaml.org,2002:str",
             value=key,
         ),
         yaml.nodes.ScalarNode(

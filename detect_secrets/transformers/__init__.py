@@ -12,8 +12,7 @@ from ..util.importlib import import_types_from_package
 from .base import BaseTransformer
 from .exceptions import ParsingError
 
-
-Transformer = TypeVar('Transformer', bound=BaseTransformer)
+Transformer = TypeVar("Transformer", bound=BaseTransformer)
 
 
 def get_transformed_file(
@@ -52,5 +51,5 @@ def _is_valid_transformer(attribute: Any) -> bool:
     return (
         inspect.isclass(attribute)
         and issubclass(attribute, BaseTransformer)
-        and attribute.__name__ != 'BaseTransformer'
+        and attribute.__name__ != "BaseTransformer"
     )
